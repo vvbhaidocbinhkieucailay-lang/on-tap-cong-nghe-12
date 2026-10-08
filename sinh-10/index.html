@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ôn tập giữa kỳ I — Sinh học 10</title>
+<!--
+====================================================================
+HƯỚNG DẪN NHANH CHO GIÁO VIÊN
+--------------------------------------------------------------------
+1. CẤU HÌNH (khung CONFIG): dán URL Apps Script vào APPS_SCRIPT_URL
+   sau khi triển khai (xem HUONG_DAN_CAI_DAT.md).
+2. MA TRẬN ĐỀ (khung MA_TRAN): đúng ma trận GK1 Sinh 10 —
+   Phần I: 12 TN nhiều lựa chọn + 2 câu đúng/sai + 8 câu trả lời ngắn
+   (tổng 7,0đ); Phần II: 3 câu tự luận (3,0đ).
+3. NGÂN HÀNG CÂU HỎI (mảng NGAN_HANG_SINH10): mỗi lượt làm bài, máy
+   bốc NGẪU NHIÊN theo đúng ma trận + xáo trộn đáp án TN.
+   - loai "TN": dapAn: 0=A,1=B,2=C,3=D
+   - loai "DS": cacY là 4 ý, mỗi ý có dapAn: true/false
+   - loai "TLN": dapAn là danh sách các cách viết được chấp nhận
+   - loai "TL": tự luận — học sinh viết đoạn văn, giáo viên chấm
+   Trường nguon: "ngan-hang" = lấy từ file ngân hàng của cô/chú,
+   "bo-sung" = soạn thêm cho đủ ma trận.
+4. LƯU Ý: đáp án TN/ĐS/TLN nằm trong file nên chỉ phù hợp để ÔN TẬP,
+   không dùng cho kiểm tra tính điểm chính thức.
+====================================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --xanh-rung:#2E7D32; --xanh-rung-dam:#1B5E20; --xanh-nuoc:#0288D1;
+    --nen:#F4F8F4; --the:#FFFFFF; --chu:#1F2933; --chu-phu:#5B6B5B;
+    --vien:#DCE9DC; --vien-dam:#C9DCCB;
+    --dung-nen:#E8F5E9; --sai-nen:#FDECEA; --sai:#D32F2F; --chon-nen:#E3F2FD;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:16px}
+  body{font-family:'Nunito',system-ui,-apple-system,sans-serif;background:var(--nen);color:var(--chu);line-height:1.55}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+  main{flex:1;padding:16px 14px 90px}
+  .screen{display:none}
+  .screen.active{display:block;animation:fadeUp .25s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .card{background:var(--the);border-radius:20px;padding:18px 16px;margin-bottom:14px;box-shadow:0 4px 14px rgba(27,94,32,.08)}
+  .section-title{font-size:1.1rem;font-weight:800;color:var(--xanh-rung-dam);margin:6px 2px 10px}
+  .muted{color:var(--chu-phu);font-size:.9rem}
+  .hero{background:linear-gradient(135deg,var(--xanh-rung-dam) 0%,var(--xanh-rung) 55%,var(--xanh-nuoc) 135%);color:#fff;border-radius:24px;padding:24px 20px;margin-bottom:14px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(27,94,32,.25)}
+  .hero-sub{font-size:.78rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.92}
+  .hero h1{font-size:1.45rem;font-weight:900;margin:6px 0 4px;line-height:1.35}
+  .hero p{font-size:.92rem;opacity:.94;font-weight:600}
+  .hero-mark{position:absolute;right:-14px;top:-14px;opacity:.16}
+  .exam-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .exam-stat{background:var(--the);border-radius:16px;padding:12px;text-align:center;box-shadow:0 4px 14px rgba(27,94,32,.08);border-top:4px solid var(--xanh-rung)}
+  .exam-stat.blue{border-top-color:var(--xanh-nuoc)}
+  .exam-stat b{display:block;font-size:1.3rem;font-weight:900;color:var(--xanh-rung-dam)}
+  .exam-stat.blue b{color:var(--xanh-nuoc)}
+  .exam-stat span{font-size:.8rem;color:var(--chu-phu);font-weight:700}
+  .cta-big{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:60px;border:none;border-radius:18px;font-family:inherit;font-size:1.12rem;font-weight:900;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--xanh-rung),var(--xanh-rung-dam));box-shadow:0 8px 20px rgba(46,125,50,.4);transition:transform .1s;margin:4px 0 14px}
+  .cta-big:active{transform:scale(.98)}
+  .steps{list-style:none;margin-top:4px}
+  .steps li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--vien);font-size:.95rem;font-weight:600;color:var(--chu-phu)}
+  .steps li:first-child{border-top:none}
+  .step-num{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:var(--dung-nen);color:var(--xanh-rung-dam);font-weight:900;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+  .field{display:block;margin-bottom:14px}
+  .field span{display:block;font-weight:800;margin-bottom:6px;font-size:.95rem}
+  .field input,.field select{width:100%;height:54px;font-family:inherit;font-size:1rem;font-weight:600;border:2px solid var(--vien-dam);border-radius:14px;padding:0 14px;background:#fff;color:var(--chu)}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--xanh-nuoc)}
+  .error-text{color:var(--sai);font-weight:700;font-size:.9rem;min-height:1.4em;margin-bottom:8px}
+  .btn{font-family:inherit;font-size:1rem;font-weight:800;border:none;border-radius:16px;min-height:52px;padding:0 18px;cursor:pointer;transition:transform .1s}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:linear-gradient(135deg,var(--xanh-rung),var(--xanh-rung-dam));color:#fff;box-shadow:0 6px 14px rgba(46,125,50,.35)}
+  .btn.ghost{background:#fff;color:var(--xanh-rung);border:2px solid var(--vien-dam)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .nav-row{display:flex;gap:10px;margin-top:4px}
+  .nav-row .btn{flex:1}
+  .nav-row.sticky{position:sticky;bottom:12px;margin-top:14px}
+  .info-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--vien);font-size:.95rem}
+  .info-row:first-of-type{border-top:none}
+  .info-row b{color:var(--xanh-rung-dam)}
+  .quiz-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .quiz-phan{font-weight:900;color:var(--xanh-rung-dam);font-size:1rem}
+  .quiz-tools{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .icon-btn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:12px;border:2px solid var(--vien-dam);background:#fff;font-family:inherit;font-size:.85rem;font-weight:800;color:var(--xanh-rung-dam);cursor:pointer}
+  .icon-btn.mo{background:var(--xanh-rung-dam);border-color:var(--xanh-rung-dam);color:#fff}
+  .timer-chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2px solid var(--vien-dam);border-radius:999px;padding:7px 14px;font-size:.95rem;font-weight:900;color:var(--chu)}
+  .timer-chip.het-gio{background:var(--sai-nen);border-color:var(--sai);color:var(--sai)}
+  .progress-bar{height:10px;background:var(--vien);border-radius:999px;overflow:hidden;margin-bottom:14px}
+  .progress-fill{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--xanh-rung),var(--xanh-nuoc));transition:width .3s}
+  .palette{display:none;background:var(--the);border-radius:18px;padding:14px;margin-bottom:14px;box-shadow:0 4px 14px rgba(27,94,32,.08)}
+  .palette.mo{display:block;animation:fadeUp .2s ease}
+  .palette-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:12px}
+  .p-cell{aspect-ratio:1;border-radius:10px;border:2px solid var(--vien-dam);background:#fff;font-family:inherit;font-weight:800;font-size:.9rem;color:var(--chu-phu);cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:44px}
+  .p-cell.lam{border-color:var(--xanh-nuoc);background:var(--chon-nen);color:var(--xanh-nuoc)}
+  .p-cell.hien-tai{border-color:var(--xanh-rung-dam);background:var(--xanh-rung-dam);color:#fff}
+  .palette-chu-thich{display:flex;gap:14px;font-size:.8rem;color:var(--chu-phu);font-weight:700;margin-bottom:12px;flex-wrap:wrap}
+  .dot{width:12px;height:12px;border-radius:4px;display:inline-block;margin-right:4px;vertical-align:baseline}
+  .q-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .q-chip{background:var(--dung-nen);color:var(--xanh-rung-dam);font-weight:800;font-size:.8rem;padding:4px 12px;border-radius:999px}
+  .q-phan2{background:var(--chon-nen);color:#01579B}
+  .q-mucdo{font-size:.8rem;font-weight:700;color:var(--chu-phu)}
+  .q-noidung{font-size:1.06rem;font-weight:700;margin-bottom:14px;white-space:pre-wrap}
+  .opt{display:flex;align-items:center;gap:12px;width:100%;min-height:54px;text-align:left;font-family:inherit;font-size:1rem;font-weight:600;color:var(--chu);background:#fff;border:2px solid var(--vien-dam);border-radius:16px;padding:10px 14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+  .opt:active{transform:scale(.985)}
+  .opt-letter{width:34px;height:34px;border-radius:50%;background:#EDF3ED;color:var(--xanh-rung);font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .opt.chon{border-color:var(--xanh-nuoc);background:var(--chon-nen)}
+  .opt.chon .opt-letter{background:var(--xanh-nuoc);color:#fff}
+  .ds-y{background:#FAFCFA;border:2px solid var(--vien);border-radius:14px;padding:12px;margin-bottom:10px}
+  .ds-text{font-weight:600;margin-bottom:10px}
+  .ds-btns{display:flex;gap:10px}
+  .ds-btn{flex:1;min-height:48px;border-radius:12px;font-family:inherit;font-size:.95rem;font-weight:800;border:2px solid var(--vien-dam);background:#fff;color:var(--chu-phu);cursor:pointer}
+  .ds-btn.chon-dung{background:var(--xanh-rung);border-color:var(--xanh-rung);color:#fff}
+  .ds-btn.chon-sai{background:var(--sai);border-color:var(--sai);color:#fff}
+  .tln-input{width:100%;min-height:56px;font-family:inherit;font-size:1rem;font-weight:600;border:2px solid var(--vien-dam);border-radius:14px;padding:12px 14px;background:#fff;color:var(--chu)}
+  .tln-input:focus{outline:none;border-color:var(--xanh-nuoc)}
+  .tl-textarea{width:100%;min-height:170px;font-family:inherit;font-size:1rem;font-weight:600;border:2px solid var(--vien-dam);border-radius:14px;padding:12px 14px;background:#fff;color:var(--chu);resize:vertical;line-height:1.65}
+  .tl-textarea:focus{outline:none;border-color:var(--xanh-nuoc)}
+  .tl-hint{font-size:.85rem;color:var(--chu-phu);font-weight:700;margin-top:8px}
+  .result-hero{text-align:center}
+  .score-ring{width:150px;height:150px;margin:6px auto 10px;position:relative}
+  .score-ring svg{transform:rotate(-90deg)}
+  .score-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .score-num b{font-size:2.2rem;font-weight:900;color:var(--xanh-rung-dam)}
+  .score-num span{font-size:.85rem;color:var(--chu-phu);font-weight:700}
+  .ket-qua-dong{font-size:1rem;font-weight:700;margin-top:4px}
+  .diem-phan{display:flex;gap:10px;margin-top:12px}
+  .diem-phan div{flex:1;background:#F7FAF7;border-radius:12px;padding:8px}
+  .diem-phan b{display:block;font-size:1.1rem;color:var(--xanh-rung-dam)}
+  .diem-phan span{font-size:.78rem;color:var(--chu-phu);font-weight:700}
+  .nhan-xet{font-size:1.02rem;font-weight:700;color:var(--xanh-rung-dam);margin-bottom:8px}
+  .goi-y-on{font-size:.95rem;color:var(--chu);font-weight:600;background:#FFF8E1;border-radius:12px;padding:10px 12px;margin-top:10px}
+  .review{border-top:1px solid var(--vien);padding:12px 0}
+  .review:first-of-type{border-top:none}
+  .review-head{display:flex;gap:8px;align-items:flex-start;font-weight:800;margin-bottom:6px}
+  .badge{flex-shrink:0;font-size:.78rem;font-weight:800;padding:3px 10px;border-radius:999px}
+  .badge.dung{background:var(--dung-nen);color:var(--xanh-rung-dam)}
+  .badge.sai{background:var(--sai-nen);color:var(--sai)}
+  .badge.cho{background:var(--chon-nen);color:#01579B}
+  .review .dap-an{font-size:.92rem;margin:4px 0}
+  .review .giai-thich{font-size:.9rem;color:var(--chu-phu);background:#F7FAF7;border-radius:10px;padding:8px 10px;margin-top:6px}
+  .ds-review{font-size:.9rem;margin:2px 0 2px 4px}
+  .tl-bai-lam{background:#F7FAF7;border-radius:10px;padding:10px 12px;font-size:.92rem;white-space:pre-wrap;margin:6px 0}
+  .result-code-box{background:#F7FAF7;border:2px dashed var(--vien-dam);border-radius:14px;padding:12px;margin-top:12px;text-align:center}
+  .result-code-box b{font-size:1.3rem;letter-spacing:2px;color:var(--xanh-nuoc)}
+  .send-status{font-size:.95rem;font-weight:700;padding:10px 12px;border-radius:12px;margin-bottom:10px}
+  .send-status.dang{background:var(--chon-nen);color:var(--xanh-nuoc)}
+  .send-status.ok{background:var(--dung-nen);color:var(--xanh-rung-dam)}
+  .send-status.loi{background:var(--sai-nen);color:var(--sai)}
+  .app-footer{text-align:center;font-size:.8rem;color:var(--chu-phu);padding:14px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="app">
+  <main>
+    <!-- ============ MÀN HÌNH 1: TRANG CHỦ ============ -->
+    <section id="man-hinh-chinh" class="screen active">
+      <div class="hero">
+        <svg class="hero-mark" width="120" height="120" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4C20 4 10 14 10 22a10 10 0 0 0 20 0C30 14 20 4 20 4Z" fill="#FFFFFF"/>
+          <path d="M4 34c3-2.5 6-2.5 9 0 3 2.5 6 2.5 9 0 3-2.5 6-2.5 9 0" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <div class="hero-sub">Sinh học 10 · Giữa kỳ I</div>
+        <h1>Ôn tập kiểm tra<br>giữa kỳ I</h1>
+        <p>Đề bám sát ma trận của trường — mỗi lượt làm là một đề khác nhau.</p>
+      </div>
+
+      <div class="exam-grid">
+        <div class="exam-stat"><b>22 câu</b><span>Trắc nghiệm · 7,0 điểm</span></div>
+        <div class="exam-stat blue"><b>3 câu</b><span>Tự luận · 3,0 điểm</span></div>
+        <div class="exam-stat"><b>45 phút</b><span>Thời gian làm bài</span></div>
+        <div class="exam-stat blue"><b>10 điểm</b><span>Thang điểm</span></div>
+      </div>
+
+      <button class="cta-big" id="nut-bat-dau">
+        Bắt đầu
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <div class="card">
+        <h2 class="section-title">Cách làm bài</h2>
+        <ul class="steps">
+          <li><span class="step-num">1</span><span>Nhập <b>họ tên</b> và <b>lớp</b> của em.</span></li>
+          <li><span class="step-num">2</span><span>Làm <b>Phần I</b> (12 câu trắc nghiệm, 2 câu đúng/sai, 8 câu trả lời ngắn), rồi <b>Phần II</b> (3 câu tự luận — viết thành đoạn văn).</span></li>
+          <li><span class="step-num">3</span><span>Dùng <b>lưới câu hỏi</b> để nhảy tới câu chưa làm. Bấm <b>Nộp bài</b> trước khi hết 45 phút.</span></li>
+          <li><span class="step-num">4</span><span>Xem điểm trắc nghiệm và đáp án ngay sau khi nộp. Bài tự luận cô/chú sẽ chấm sau.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ MÀN HÌNH 2: THÔNG TIN + SẴN SÀNG ============ -->
+    <section id="man-hinh-thong-tin" class="screen">
+      <div class="card">
+        <h2 class="section-title">Thông tin học sinh</h2>
+        <label class="field">
+          <span>Họ và tên</span>
+          <input id="o-ho-ten" type="text" placeholder="VD: Nguyễn Văn An" autocomplete="name" maxlength="60">
+        </label>
+        <label class="field">
+          <span>Lớp</span>
+          <input id="o-lop" type="text" placeholder="VD: 10A1" maxlength="20">
+        </label>
+        <p class="error-text" id="loi-thong-tin"></p>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Cấu trúc đề thi</h2>
+        <div class="info-row"><span>Phần I — Trắc nghiệm nhiều lựa chọn</span><b>12 câu × 0,25đ</b></div>
+        <div class="info-row"><span>Phần I — Trắc nghiệm đúng/sai</span><b>2 câu × 4 ý × 0,25đ</b></div>
+        <div class="info-row"><span>Phần I — Trả lời ngắn</span><b>8 câu × 0,25đ</b></div>
+        <div class="info-row"><span>Phần II — Tự luận (cô/chú chấm)</span><b>3 câu × 1,0đ</b></div>
+        <div class="info-row"><span>Phạm vi</span><b>Bài 1 → Bài 6</b></div>
+        <div class="info-row"><span>Thời gian làm bài</span><b>45 phút</b></div>
+        <div class="info-row"><span>Tổng điểm</span><b>10 điểm</b></div>
+        <p class="muted" style="margin-top:10px">Mỗi lượt làm, máy bốc ngẫu nhiên câu hỏi theo đúng ma trận nên đề của mỗi bạn khác nhau. Cố gắng làm hết sức mình nhé!</p>
+      </div>
+
+      <button class="cta-big" id="nut-vao-lam-bai">
+        Bắt đầu làm bài
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="nav-row" style="margin-bottom:14px">
+        <button class="btn ghost" id="nut-tro-ve-chinh">‹ Trang chủ</button>
+      </div>
+    </section>
+
+    <!-- ============ MÀN HÌNH 3: LÀM BÀI ============ -->
+    <section id="man-hinh-lam-bai" class="screen">
+      <div class="quiz-head">
+        <span class="quiz-phan" id="ten-phan">Phần I</span>
+        <div class="quiz-tools">
+          <button class="icon-btn" id="nut-luoi-cau">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.8"/></svg>
+            Câu hỏi
+          </button>
+          <span class="timer-chip" id="dong-ho">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="M8 4.5V8l2.5 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span id="dong-ho-so">45:00</span>
+          </span>
+        </div>
+      </div>
+      <div class="quiz-head" style="margin-top:-4px">
+        <span class="muted" id="tien-do-chu" style="font-weight:800">Câu 1 / 25</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="thanh-tien-do"></div></div>
+
+      <div class="palette" id="luoi-cau-hoi">
+        <div class="palette-grid" id="luoi-o-cau"></div>
+        <div class="palette-chu-thich">
+          <span><span class="dot" style="background:#E3F2FD;border:2px solid #0288D1"></span>Đã làm</span>
+          <span><span class="dot" style="background:#1B5E20"></span>Đang làm</span>
+          <span><span class="dot" style="background:#fff;border:2px solid #C9DCCB"></span>Chưa làm</span>
+        </div>
+        <button class="btn primary" id="nut-nop-tu-luoi" style="width:100%">Nộp bài</button>
+      </div>
+
+      <div class="card" id="the-cau-hoi"></div>
+      <div class="nav-row sticky">
+        <button class="btn ghost" id="nut-quay-lai">‹ Quay lại</button>
+        <button class="btn primary" id="nut-tiep-theo">Câu tiếp ›</button>
+      </div>
+    </section>
+
+    <!-- ============ MÀN HÌNH 4: KẾT QUẢ ============ -->
+    <section id="man-hinh-ket-qua" class="screen">
+      <div class="card result-hero">
+        <div class="score-ring">
+          <svg width="150" height="150" viewBox="0 0 150 150">
+            <circle cx="75" cy="75" r="64" fill="none" stroke="#DCE9DC" stroke-width="14"/>
+            <circle id="vong-diem" cx="75" cy="75" r="64" fill="none" stroke="#2E7D32" stroke-width="14"
+                    stroke-linecap="round" stroke-dasharray="402.1" stroke-dashoffset="402.1"/>
+          </svg>
+          <div class="score-num"><b id="diem-so">0</b><span id="diem-so-chu">/ 7 điểm trắc nghiệm</span></div>
+        </div>
+        <div id="tom-tat-ket-qua"></div>
+        <div class="diem-phan">
+          <div><b id="diem-phan-1">0</b><span>Phần I / 7,0đ</span></div>
+          <div><b id="diem-phan-2">Chờ chấm</b><span>Phần II / 3,0đ</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="nhan-xet" id="loi-nhan-xet"></div>
+        <div class="goi-y-on" id="goi-y-on-lai" style="display:none"></div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Gửi kết quả cho giáo viên</h2>
+        <div id="trang-thai-gui"></div>
+        <button class="btn primary" id="nut-gui-lai" style="display:none;width:100%">Gửi lại kết quả</button>
+        <div class="result-code-box">
+          Mã kết quả của em: <b id="ma-ket-qua">—</b>
+          <p class="muted" style="margin-top:6px">Nếu mạng yếu, em hãy <b>chụp màn hình</b> cả điểm và mã này để nộp dự phòng nhé.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Chi tiết từng câu</h2>
+        <div id="chi-tiet-cau"></div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn ghost" id="nut-ve-trang-chu">‹ Trang chủ</button>
+        <button class="btn primary" id="nut-lam-lai">Làm đề mới ›</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">Ôn tập giữa kỳ I · Sinh học 10 · Chúc em làm bài tốt!</footer>
+</div>
+<script>
+/* =====================================================================
+   PHẦN 1: CẤU HÌNH — cô/chú dán URL Apps Script vào APPS_SCRIPT_URL
+   sau khi triển khai (xem HUONG_DAN_CAI_DAT.md).
+   ===================================================================== */
+const CONFIG = {
+  APPS_SCRIPT_URL: "",   // <-- dán URL web app Apps Script vào đây
+  CHO_PHEP_LAM_LAI: true,
+  GIOI_HAN_PHUT: 45,     // theo ma trận GK1: 45 phút (0 = không giới hạn)
+};
+
+/* =====================================================================
+   PHẦN 2: MA TRẬN ĐỀ (theo ma trận kiểm tra giữa kỳ I Sinh học 10)
+   - Phần I (7,0đ): 12 câu TN nhiều lựa chọn (3,0đ) + 2 câu đúng/sai
+     gồm 8 ý (2,0đ) + 8 câu trả lời ngắn (2,0đ)
+   - Phần II (3,0đ): 3 câu tự luận — học sinh viết đoạn văn, GV chấm
+   ===================================================================== */
+const MA_TRAN = {
+  tracnghiem: [
+    { bai: 1, mucDo: "B",  soCau: 2 },
+    { bai: 2, mucDo: "B",  soCau: 1 },
+    { bai: 2, mucDo: "H",  soCau: 1 },
+    { bai: 3, mucDo: "B",  soCau: 2 },
+    { bai: 4, mucDo: "B",  soCau: 1 },
+    { bai: 4, mucDo: "H",  soCau: 1 },
+    { bai: 5, mucDo: "B",  soCau: 1 },
+    { bai: 5, mucDo: "H",  soCau: 1 },
+    { bai: 6, mucDo: "VD", soCau: 2 },
+  ],
+  dungsai: [
+    { bai: 2, soCau: 1 },
+    { bai: 5, soCau: 1 },
+  ],
+  traloiNgan: [
+    { bai: 4, mucDo: "B",  soCau: 2 },
+    { bai: 3, mucDo: "H",  soCau: 2 },
+    { bai: 5, mucDo: "H",  soCau: 2 },
+    { bai: 5, mucDo: "VD", soCau: 2 },
+  ],
+  tuluuan: [
+    { bai: 4, mucDo: "B",  soCau: 1 },
+    { bai: 3, mucDo: "H",  soCau: 1 },
+    { bai: 5, mucDo: "VD", soCau: 1 },
+  ]
+};
+const DIEM = { TN: 0.25, DS_Y: 0.25, TLN: 0.25, TL: 1.0 };
+const TONG_CAU = 25; // 12 + 2 + 8 + 3
+
+/* =====================================================================
+   NGÂN HÀNG CÂU HỎI — ÔN TẬP GIỮA KỲ I, SINH HỌC 10 (ma trận 26-27)
+   - Câu có nguon "ngan-hang": trích NGUYÊN VĂN từ file NHCH_KTGKI_SH10_25-26.docx
+     của giáo viên. Bài đã quy đổi sang ma trận 26-27:
+     NH Bài 3 → MT Bài 3; NH Bài 4 → MT Bài 4; NH Bài 5 → MT Bài 4; NH Bài 6 → MT Bài 5.
+   - Câu có nguon "bo-sung": trợ lý soạn thêm cho đủ ma trận (Bài 1, Bài 2,
+     Bài 6, trả lời ngắn, tự luận).
+   - LƯU Ý QUAN TRỌNG: đáp án các câu TN của NH Bài 3/5/6 KHÔNG được in đậm
+     rõ trong file gốc nên đã điền theo kiến thức chuyên môn — giáo viên
+     kiểm tra lại trước khi cho học sinh làm.
+   ===================================================================== */
+const NGAN_HANG_SINH10 = [
+
+// ================= BÀI 1 (ma trận): GIỚI THIỆU KHÁI QUÁT MÔN SINH HỌC (tự soạn) =================
+{ id:"SH10-TN001", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"Đối tượng nghiên cứu của sinh học là gì?",
+  luaChon:["Thế giới vô sinh và các hiện tượng vật lí",
+           "Sinh vật, các cấp độ tổ chức sống và mối quan hệ của sinh vật với môi trường",
+           "Các phản ứng hóa học trong công nghiệp",
+           "Cấu tạo bên trong của Trái Đất"],
+  dapAn:1,
+  giaiThich:"Sinh học là khoa học nghiên cứu về sự sống: các sinh vật, các cấp độ tổ chức của thế giới sống và mối quan hệ giữa sinh vật với môi trường." },
+{ id:"SH10-TN002", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"Ngành nghề nào sau đây có liên quan trực tiếp đến sinh học?",
+  luaChon:["Kĩ sư xây dựng","Bác sĩ y khoa","Kế toán","Kiến trúc sư"],
+  dapAn:1,
+  giaiThich:"Bác sĩ y khoa nghiên cứu cơ thể người, bệnh tật và thuốc chữa bệnh — gắn trực tiếp với kiến thức sinh học." },
+{ id:"SH10-TN003", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"Phát biểu nào sau đây đúng về phát triển bền vững?",
+  luaChon:["Khai thác tối đa tài nguyên để phát triển kinh tế trước mắt",
+           "Đáp ứng nhu cầu của hiện tại mà không làm ảnh hưởng đến khả năng đáp ứng nhu cầu của các thế hệ tương lai",
+           "Chỉ tập trung bảo vệ động vật hoang dã",
+           "Ngừng mọi hoạt động sản xuất công nghiệp"],
+  dapAn:1,
+  giaiThich:"Phát triển bền vững là sự phát triển đáp ứng nhu cầu hiện tại mà không làm tổn hại khả năng đáp ứng nhu cầu của các thế hệ tương lai." },
+
+// ================= BÀI 2 (ma trận): PHƯƠNG PHÁP NGHIÊN CỨU VÀ HỌC TẬP MÔN SINH HỌC (tự soạn) =================
+{ id:"SH10-TN004", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"Phương pháp nào sau đây KHÔNG phải là phương pháp nghiên cứu sinh học?",
+  luaChon:["Quan sát","Làm việc trong phòng thí nghiệm","Thực nghiệm khoa học","Phỏng đoán cảm tính, không kiểm chứng"],
+  dapAn:3,
+  giaiThich:"Ba phương pháp nghiên cứu sinh học cơ bản là quan sát, làm việc trong phòng thí nghiệm và thực nghiệm khoa học; phỏng đoán không kiểm chứng không phải phương pháp khoa học." },
+{ id:"SH10-TN005", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"Tin sinh học (bioinformatics) là",
+  luaChon:["ngành khoa học sử dụng công cụ tin học để lưu trữ, phân tích dữ liệu sinh học",
+           "phần mềm chỉnh sửa hình ảnh",
+           "phương pháp trồng cây trong nhà kính",
+           "kĩ thuật mổ xẻ động vật trong phòng thí nghiệm"],
+  dapAn:0,
+  giaiThich:"Tin sinh học dùng công cụ tin học để lưu trữ, quản lí và phân tích các dữ liệu sinh học (trình tự DNA, protein...), là công cụ quan trọng trong nghiên cứu và học tập sinh học hiện nay." },
+{ id:"SH10-TN006", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"H", loai:"TN", nguon:"bo-sung",
+  noiDung:"Một học sinh muốn tìm hiểu ảnh hưởng của ánh sáng đến sự sinh trưởng của cây đậu: trồng hai chậu cây giống hệt nhau, một chậu để nơi có ánh sáng, một chậu để nơi thiếu sáng rồi so sánh. Đây là phương pháp nào?",
+  luaChon:["Quan sát thuần túy","Thực nghiệm khoa học","Tin sinh học","Điều tra xã hội học"],
+  dapAn:1,
+  giaiThich:"Thực nghiệm khoa học là phương pháp chủ động tác động vào đối tượng, bố trí thí nghiệm đối chứng (chỉ khác nhau một yếu tố) để tìm hiểu mối quan hệ nhân quả." },
+{ id:"SH10-TN007", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"H", loai:"TN", nguon:"bo-sung",
+  noiDung:"Trong tiến trình nghiên cứu khoa học, sau khi quan sát hiện tượng và đặt câu hỏi, bước tiếp theo thường là",
+  luaChon:["viết báo cáo kết quả ngay",
+           "xây dựng giả thuyết và thiết kế thí nghiệm để kiểm chứng",
+           "công bố kết quả trên báo chí",
+           "tiếp tục quan sát mà không cần giả thuyết"],
+  dapAn:1,
+  giaiThich:"Tiến trình nghiên cứu gồm: quan sát → đặt câu hỏi → xây dựng giả thuyết → thiết kế và tiến hành thí nghiệm kiểm chứng → thu thập, xử lí số liệu → báo cáo." },
+
+// ================= BÀI 3 (ma trận): CÁC CẤP ĐỘ TỔ CHỨC CỦA THẾ GIỚI SỐNG (từ ngân hàng) =================
+{ id:"SH10-TN008", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Các cấp độ tổ chức sống thể hiện được các đặc trưng sống cơ bản như:",
+  luaChon:["chuyển hóa vật chất và năng lượng, sinh trưởng và phát triển, sinh sản, cảm ứng,…",
+           "chuyển hóa vật chất, sinh trưởng và phát triển, sinh sản, cảm ứng,…",
+           "chuyển hóa vật chất và năng lượng, phát triển, sinh sản, cảm ứng,…",
+           "chuyển hóa vật chất và năng lượng, sinh trưởng và phát triển, sinh sản,…"],
+  dapAn:0,
+  giaiThich:"Các đặc trưng sống cơ bản gồm: chuyển hóa vật chất và năng lượng, sinh trưởng và phát triển, sinh sản, cảm ứng." },
+{ id:"SH10-TN009", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Cấp độ tổ chức nhỏ nhất trong cấp độ tổ chức sống là gì?",
+  luaChon:["Nguyên tử.","Phân tử.","Tế bào.","Hợp tử."],
+  dapAn:2,
+  giaiThich:"Tế bào là cấp độ tổ chức nhỏ nhất biểu hiện đầy đủ các đặc trưng của sự sống." },
+{ id:"SH10-TN010", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Tổ chức sống nào sau đây là bào quan?",
+  luaChon:["Tim.","Phổi.","Lục lạp.","Não."],
+  dapAn:2,
+  giaiThich:"Lục lạp là bào quan trong tế bào thực vật; tim, phổi, não là các cơ quan." },
+{ id:"SH10-TN011", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Đơn vị tổ chức cơ sở của mọi sinh vật là",
+  luaChon:["các đại phân tử.","tế bào.","mô.","cơ quan."],
+  dapAn:1,
+  giaiThich:"Tế bào là đơn vị tổ chức cơ sở (đơn vị cấu trúc và chức năng) của mọi sinh vật." },
+{ id:"SH10-TN012", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Quần xã sinh vật là",
+  luaChon:["tập hợp nhiều quần thể của các loài khác nhau.",
+           "tập hợp nhiều quần thể cùng loài.",
+           "tập hợp các cá thể cùng loài.",
+           "tập hợp cá thể của hai loài sống ở hai nơi."],
+  dapAn:0,
+  giaiThich:"Quần xã sinh vật gồm nhiều quần thể của các loài khác nhau cùng sống trong một không gian xác định." },
+{ id:"SH10-TN013", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Tập hợp nhiều tế bào cùng loại và cùng thực hiện một chức năng nhất định tạo thành",
+  luaChon:["hệ cơ quan.","mô.","cơ thể.","cơ quan."],
+  dapAn:1,
+  giaiThich:"Mô là tập hợp các tế bào cùng loại, cùng thực hiện một chức năng nhất định." },
+{ id:"SH10-TN014", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Các cấp tổ chức cơ bản theo thứ tự đúng là",
+  luaChon:["tế bào, cơ thể, quần xã, quần thể, hệ sinh thái.",
+           "tế bào, quần thể, cơ thể, quần xã, hệ sinh thái.",
+           "tế bào, cơ thể, quần thể, quần xã, hệ sinh thái.",
+           "cơ thể, quần thể, quần xã, tế bào, hệ sinh thái."],
+  dapAn:2,
+  giaiThich:"Theo nguyên tắc thứ bậc từ thấp đến cao: tế bào → cơ thể → quần thể → quần xã → hệ sinh thái." },
+{ id:"SH10-TN015", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Căn cứ chủ yếu để coi tế bào là đơn vị cơ bản của sự sống là vì chúng",
+  luaChon:["có cấu tạo phức tạp.","có cấu tạo đơn giản.",
+           "được cấu tạo bởi nhiều bào quan.","biểu hiện đầy đủ các đặc tính của sự sống."],
+  dapAn:3,
+  giaiThich:"Tế bào biểu hiện đầy đủ các đặc tính của sự sống (chuyển hóa, sinh trưởng, sinh sản, cảm ứng...) nên được coi là đơn vị cơ bản của sự sống." },
+{ id:"SH10-TN016", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"“Tổ chức sống cấp thấp hơn làm nền tảng để xây dựng nên tổ chức sống cấp cao hơn” giải thích cho nguyên tắc nào của thế giới sống?",
+  luaChon:["Nguyên tắc thứ bậc.","Nguyên tắc mở.","Nguyên tắc tự điều chỉnh.","Nguyên tắc bổ sung"],
+  dapAn:0,
+  giaiThich:"Đây là nội dung của nguyên tắc thứ bậc: cấp tổ chức thấp làm nền tảng xây dựng cấp tổ chức cao hơn." },
+
+// ================= BÀI 4 (ma trận): CÁC NGUYÊN TỐ HÓA HỌC VÀ NƯỚC TRONG TẾ BÀO =================
+// ---- Lấy từ NH Bài 4 "KHÁI QUÁT VỀ TẾ BÀO" ----
+{ id:"SH10-TN017", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Người đã sử dụng kính hiển vi quang học để quan sát các lát mỏng từ vỏ bần của cây sồi là",
+  luaChon:["Robert Hooke","Leeuwenhoek","Theodor Schwann","Matthias Schleiden"],
+  dapAn:0,
+  giaiThich:"Năm 1665, Robert Hooke dùng kính hiển vi quang học quan sát lát mỏng vỏ bần cây sồi, thấy các ô nhỏ và gọi là 'cell' (tế bào)." },
+{ id:"SH10-TN018", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Nhà khoa học nào trong số các nhà khoa học này đã xây dựng học thuyết tế bào?",
+  luaChon:["Schleiden và Schwann.","Rudolf Virchow.","Robert Koch.","Antony van Leeuwenhoek."],
+  dapAn:0,
+  giaiThich:"Schleiden và Schwann là hai nhà khoa học đã xây dựng nên học thuyết tế bào." },
+{ id:"SH10-TN019", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Cho đoạn thông tin sau: Mọi cơ thể sống đều được cấu tạo từ (1) …………. Cơ thể đa bào gồm nhiều tế bào phân hóa thành các (2) ……………., (3) ………… khác nhau cùng phối hợp thực hiện tất cả các hoạt động sống của cơ thể. Điền từ thích hợp vào chỗ trống?",
+  luaChon:["(1) cơ quan; (2) mô; (3) tế bào.",
+           "(1) tế bào; (2) mô; (3) cơ quan.",
+           "(1) mô; (2) cơ quan; (3) tế bào.",
+           "(1) mô; (2) tế bào; (3) cơ quan."],
+  dapAn:1,
+  giaiThich:"Mọi cơ thể sống đều cấu tạo từ tế bào; cơ thể đa bào gồm nhiều tế bào phân hóa thành các mô, cơ quan khác nhau." },
+{ id:"SH10-TN020", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Sinh vật có cơ thể được cấu tạo từ một tế bào gọi là",
+  luaChon:["sinh vật đa bào.","sinh vật đơn bào.","sinh vật kí sinh.","sinh vật ngoại sinh."],
+  dapAn:1,
+  giaiThich:"Sinh vật đơn bào có cơ thể chỉ gồm một tế bào nhưng vẫn thực hiện đầy đủ các hoạt động sống." },
+{ id:"SH10-TN021", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Tại sao nói tế bào là đơn vị cấu trúc và chức năng của cơ thể con người?",
+  luaChon:["Một số cơ quan trong cơ thể người được cấu tạo bởi tế bào.",
+           "Các hoạt động sống của tế bào là cơ sở cho các hoạt động sống của cơ thể.",
+           "Khi toàn bộ các tế bào bị chết thì cơ thể vẫn hoạt động bình thường.",
+           "Cơ thể sống chỉ có một tế bào thực hiện mọi chức năng sống."],
+  dapAn:1,
+  giaiThich:"Mọi hoạt động sống của cơ thể đều dựa trên hoạt động sống của tế bào, nên tế bào vừa là đơn vị cấu trúc vừa là đơn vị chức năng." },
+{ id:"SH10-TN022", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Tế bào là đơn vị cấu trúc của cơ thể vì",
+  luaChon:["tế bào là đơn vị có kích thước nhỏ nhất.",
+           "mọi cơ thể sống đều được cấu tạo từ tế bào.",
+           "mọi hoạt động sống đều được thực hiện nhờ tế bào.",
+           "tế bào có chức năng sinh sản."],
+  dapAn:1,
+  giaiThich:"Mọi cơ thể sống đều được cấu tạo từ tế bào → tế bào là đơn vị cấu trúc của cơ thể." },
+{ id:"SH10-TN023", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Phát biểu nào sau đây là không đúng với nội dung của học thuyết tế bào?",
+  luaChon:["Tế bào là đơn vị cơ sở của sự sống.",
+           "Các tế bào được sinh ra từ các tế bào có trước.",
+           "Tất cả các sinh vật đều được cấu tạo bởi nhiều tế bào.",
+           "Các tế bào đều được cấu tạo từ những thành phần hoá học tương tự như nhau."],
+  dapAn:2,
+  giaiThich:"Có sinh vật đơn bào (chỉ gồm một tế bào) nên phát biểu 'tất cả sinh vật đều cấu tạo bởi nhiều tế bào' là không đúng." },
+{ id:"SH10-TN024", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Cơ thể đơn bào có đặc điểm chỉ gồm …(1)… tế bào nhưng thực hiện được tất cả các hoạt động sống của một cơ thể nhờ sự …(2)… giữa các thành phần cấu trúc của tế bào. Các từ/cụm từ cần điền vào vị trí (1), (2) lần lượt là:",
+  luaChon:["(1) – một; (2) – phối hợp.",
+           "(1) – một; (2) – phát triển.",
+           "(1) – nhiều; (2) – phối hợp.",
+           "(1) – nhiều; (2) – phát triển."],
+  dapAn:0,
+  giaiThich:"Cơ thể đơn bào chỉ gồm một tế bào, thực hiện mọi hoạt động sống nhờ sự phối hợp giữa các thành phần cấu trúc trong tế bào." },
+// ---- Lấy từ NH Bài 5 "CÁC NGUYÊN TỐ HÓA HỌC VÀ NƯỚC" (đáp án gốc không in đậm — điền theo kiến thức, cần kiểm tra lại) ----
+{ id:"SH10-TN025", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Trong các cơ thể sống, thành phần chủ yếu là",
+  luaChon:["chất hữu cơ.","chất vô cơ.","nước.","vitamin."],
+  dapAn:2,
+  giaiThich:"Nước chiếm phần lớn khối lượng cơ thể sống (khoảng 70%), là thành phần chủ yếu." },
+{ id:"SH10-TN026", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Nguyên tố hóa học tạo nên sự đa dạng của các hợp chất hữu cơ là",
+  luaChon:["carbon","oxygen","hydrogen","nitrogen"],
+  dapAn:0,
+  giaiThich:"Carbon có 4 electron ở lớp ngoài cùng, tạo được mạch 'xương sống' đa dạng cho các hợp chất hữu cơ." },
+{ id:"SH10-TN027", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Liên kết hóa học giữa các nguyên tử trong phân tử nước là",
+  luaChon:["liên kết cộng hóa trị.","liên kết hydrogen.","liên kết ion.","liên kết phosphodieste"],
+  dapAn:0,
+  giaiThich:"Trong phân tử nước, H và O liên kết với nhau bằng liên kết cộng hóa trị phân cực; liên kết hydrogen chỉ hình thành GIỮA các phân tử nước với nhau." },
+{ id:"SH10-TN028", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Trong cơ thể sinh vật, nguyên tố chiếm tỉ lệ cao nhất là",
+  luaChon:["carbon","Hydrogen","oxygen","nitrogen"],
+  dapAn:2,
+  giaiThich:"Oxygen chiếm tỉ lệ cao nhất trong cơ thể sinh vật (có trong nước và các hợp chất hữu cơ)." },
+{ id:"SH10-TN029", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Khi nói về các nguyên tố hóa học trong tế bào sống. Nhận định nào sau đây là Sai?",
+  luaChon:["Nhóm nguyên tố chiếm số lượng chất khô nhiều nhất là C,H,O,N.",
+           "Nguyên tố vi lượng là nguyên tố có tỉ lệ lớn hơn 0,01%.",
+           "Nguyên tố đa lượng tham gia cấu tạo nên các đại phân tử hữu cơ.",
+           "Có khoảng 25 nguyên tố có vai trò quan trọng đối với sự sống."],
+  dapAn:1,
+  giaiThich:"Nguyên tố vi lượng chiếm tỉ lệ NHỎ hơn 0,01% khối lượng cơ thể, nên nhận định B là sai." },
+{ id:"SH10-TN030", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Nước là dung môi hoà tan nhiều chất trong cơ thể sống vì chúng có",
+  luaChon:["nhiệt dung riêng cao.","lực gắn kết.","nhiệt bay hơi cao.","tính phân cực."],
+  dapAn:3,
+  giaiThich:"Nhờ tính phân cực, phân tử nước hòa tan được nhiều chất phân cực và các chất ion." },
+{ id:"SH10-TN031", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Vì sao các nguyên tố vi lượng có vai trò quan trọng đối với cơ thể?",
+  luaChon:["Chiếm khối lượng nhỏ.","Giúp tăng cường hệ miễn dịch cho cơ thể.",
+           "Cơ thể sinh vật không thể tự tổng hợp các chất ấy.","Là thành phần cấu trúc bắt buộc của nhiều hệ enzyme."],
+  dapAn:3,
+  giaiThich:"Dù chỉ cần lượng rất nhỏ, nguyên tố vi lượng là thành phần bắt buộc của nhiều hệ enzyme nên rất quan trọng." },
+{ id:"SH10-TN032", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Vì sao nguyên tử carbon có thể tạo nên mạch “xương sống” của các hợp chất hữu cơ chính có trong tế bào như protein, nucleic acid, carbohydrate, lipid?",
+  luaChon:["Vì nguyên tử carbon có 3 electron tự do tham gia liên kết cộng hóa trị với các nguyên tử carbon khác và các nguyên tử khác như O, N, P….",
+           "Vì nguyên tử carbon có 4 electron tự do tham gia liên kết cộng hóa trị với các nguyên tử carbon khác và các nguyên tử khác như O, N, P….",
+           "Vì nguyên tử carbon có 5 electron tự do tham gia liên kết cộng hóa trị với các nguyên tử carbon khác và các nguyên tử khác như O, N, P….",
+           "Vì nguyên tử carbon có 6 electron tự do tham gia liên kết cộng hóa trị với các nguyên tử carbon khác và các nguyên tử khác như O, N, P…."],
+  dapAn:1,
+  giaiThich:"Carbon có 4 electron ở lớp ngoài cùng nên tạo được 4 liên kết cộng hóa trị, hình thành mạch carbon đa dạng làm 'xương sống' cho các hợp chất hữu cơ." },
+{ id:"SH10-TN033", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"Có khoảng bao nhiêu nguyên tố hóa học tham gia cấu thành các cơ thể sống?",
+  luaChon:["Khoảng 25 nguyên tố","Khoảng 60 nguyên tố","Khoảng 90 nguyên tố","Tất cả 118 nguyên tố đã biết"],
+  dapAn:0,
+  giaiThich:"Trong hơn 100 nguyên tố đã biết, chỉ có khoảng 25 nguyên tố tham gia cấu thành cơ thể sống; riêng C, H, O, N đã chiếm khoảng 96% khối lượng cơ thể. (Câu gốc trong ngân hàng ghi phương án theo % khó hiểu nên đã viết lại cho rõ ràng.)" },
+
+// ================= BÀI 5 (ma trận): CÁC PHÂN TỬ SINH HỌC (từ NH Bài 6; đáp án gốc không in đậm — điền theo kiến thức, cần kiểm tra lại) =================
+{ id:"SH10-TN034", bai:5, chuDe:"Các phân tử sinh học", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Các nguyên tố hoá học cấu tạo của Cacbohidrate là",
+  luaChon:["carbon và hydrogen.","hydrogen và oxygen.","oxygen và carbon.","carbon, hydrogen và oxygen."],
+  dapAn:3,
+  giaiThich:"Carbohydrate được cấu tạo từ ba nguyên tố C, H, O." },
+{ id:"SH10-TN035", bai:5, chuDe:"Các phân tử sinh học", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Chức năng chủ yếu của đường glucose là",
+  luaChon:["tham gia cấu tạo thành tế bào.",
+           "cung cấp năng lượng cho hoạt động tế bào.",
+           "tham gia cấu tạo nhiễm sắc thể.",
+           "là thành phần của phân tử DNA."],
+  dapAn:1,
+  giaiThich:"Glucose là nguồn cung cấp năng lượng chủ yếu cho hoạt động của tế bào." },
+{ id:"SH10-TN036", bai:5, chuDe:"Các phân tử sinh học", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Đơn phân của protein là",
+  luaChon:["nucleosome","acid amin.","nucleotid.","acid béo."],
+  dapAn:1,
+  giaiThich:"Protein được cấu tạo theo nguyên tắc đa phân, đơn phân là acid amin." },
+{ id:"SH10-TN037", bai:5, chuDe:"Các phân tử sinh học", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Liên kết hóa học chủ yếu giữa các acid amin trong phân tử protein là",
+  luaChon:["liên kết hóa trị.","liên kết hidro.","liên kết đisunfua.","liên kết peptid."],
+  dapAn:3,
+  giaiThich:"Các acid amin liên kết với nhau bằng liên kết peptit tạo thành chuỗi polipeptit." },
+{ id:"SH10-TN038", bai:5, chuDe:"Các phân tử sinh học", mucDo:"B", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Đơn phân cấu tạo của DNA là?",
+  luaChon:["Amino acid.","Acid deoxyribonucleic.","Acid ribonucleic.","Nucleotide."],
+  dapAn:3,
+  giaiThich:"DNA được cấu tạo theo nguyên tắc đa phân, đơn phân là nucleotide." },
+{ id:"SH10-TN039", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Một phân tử mỡ bao gồm:",
+  luaChon:["1 phân tử glycerol với 1 acid béo.",
+           "1 phân tử glycerol với 2 acid béo.",
+           "1 phân tử glycerol với 3 acid béo.",
+           "3 phân tử glycerol với 3 acid béo."],
+  dapAn:2,
+  giaiThich:"Một phân tử mỡ (triglyceride) gồm 1 phân tử glycerol liên kết với 3 phân tử acid béo." },
+{ id:"SH10-TN040", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Phospholipid có chức năng chủ yếu là",
+  luaChon:["tham gia cấu tạo nhân của tế bào.",
+           "là thành phần cấu tạo của màng tế bào.",
+           "là thành phần của máu ở động vật.",
+           "cấu tạo nên chất diệp lục ở lá cây."],
+  dapAn:1,
+  giaiThich:"Phospholipid là thành phần chính cấu tạo nên màng tế bào (lớp kép phospholipid)." },
+{ id:"SH10-TN041", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Protein có tính đa dạng và đặc thù thể hiện chủ yếu ở",
+  luaChon:["nhóm amin và nhóm cacboxyl của các acid amin.",
+           "nhóm R của các acid amin.",
+           "liên kết peptid, liên kết hidro và các liên kết khác.",
+           "số lượng, thành phần và trật tự sắp xếp các acid amin."],
+  dapAn:3,
+  giaiThich:"Tính đa dạng, đặc thù của protein do số lượng, thành phần và trật tự sắp xếp các acid amin quy định." },
+{ id:"SH10-TN042", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TN", nguon:"ngan-hang",
+  noiDung:"Điều nào sau đây đúng khi nói về liên kết bổ sung giữa các nucleotide trong phân tử DNA?",
+  luaChon:["A liên kết T bằng 2 liên kết hydrogen.",
+           "T liên kết C bằng 2 liên kết hydrogen.",
+           "C liên kết G bằng 2 liên kết hydrogen.",
+           "G liên kết A bằng 3 liên kết hydrogen."],
+  dapAn:0,
+  giaiThich:"Theo nguyên tắc bổ sung: A liên kết với T bằng 2 liên kết hydrogen; G liên kết với C bằng 3 liên kết hydrogen." },
+
+// ================= BÀI 6 (ma trận): THỰC HÀNH NHẬN BIẾT MỘT SỐ PHÂN TỬ SINH HỌC (tự soạn) =================
+{ id:"SH10-TN043", bai:6, chuDe:"Thực hành: Nhận biết một số phân tử sinh học", mucDo:"VD", loai:"TN", nguon:"bo-sung",
+  noiDung:"Để nhận biết sự có mặt của protein trong một mẫu dịch lỏng, ta có thể dùng thuốc thử nào sau đây?",
+  luaChon:["Thuốc thử Biuret (xuất hiện màu tím)",
+           "Dung dịch iot (xuất hiện màu xanh tím)",
+           "Giấy trắng (xuất hiện vết mờ trong suốt)",
+           "Nước vôi trong (xuất hiện vẩn đục)"],
+  dapAn:0,
+  giaiThich:"Thuốc thử Biuret phản ứng với liên kết peptit trong protein tạo màu tím đặc trưng." },
+{ id:"SH10-TN044", bai:6, chuDe:"Thực hành: Nhận biết một số phân tử sinh học", mucDo:"VD", loai:"TN", nguon:"bo-sung",
+  noiDung:"Nhỏ vài giọt dầu ăn lên tờ giấy trắng, để khô thấy còn lại vết mờ trong suốt. Kết luận nào sau đây đúng?",
+  luaChon:["Dầu ăn chứa tinh bột","Dầu ăn chứa lipid","Dầu ăn chứa protein","Dầu ăn chứa đường đơn"],
+  dapAn:1,
+  giaiThich:"Lipid để lại vết mờ trong suốt trên giấy — đây là cách nhận biết lipid đơn giản." },
+{ id:"SH10-TN045", bai:6, chuDe:"Thực hành: Nhận biết một số phân tử sinh học", mucDo:"VD", loai:"TN", nguon:"bo-sung",
+  noiDung:"Nhỏ dung dịch iot vào lát cắt củ khoai tây thấy xuất hiện màu xanh tím. Kết luận nào sau đây đúng?",
+  luaChon:["Khoai tây chứa nhiều protein",
+           "Khoai tây chứa nhiều tinh bột",
+           "Khoai tây chứa nhiều lipid",
+           "Khoai tây chứa nhiều vitamin C"],
+  dapAn:1,
+  giaiThich:"Dung dịch iot gặp tinh bột cho màu xanh tím đặc trưng → khoai tây chứa nhiều tinh bột." },
+
+// ================= CÂU HỎI ĐÚNG/SAI =================
+// ---- Bài 5 (ma trận): từ ngân hàng (phần Nucleic acid, có đáp án trong file) ----
+{ id:"SH10-DS01", bai:5, chuDe:"Các phân tử sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"ngan-hang",
+  noiDung:"Cho các phát biểu về DNA. Mỗi nhận định sau đây là Đúng hay Sai?",
+  cacY:[
+    { kyHieu:"a", noiDung:"Được cấu tạo từ 2 mạch đơn liên kết bổ sung với nhau bằng các liên kết hydrogen nên phân tử DNA có cấu trúc khá bền vững.", mucDo:"B", dapAn:true },
+    { kyHieu:"b", noiDung:"Ở sinh vật nhân sơ, các phân tử DNA mạch kép có cấu trúc mạch vòng và hệ gene của mỗi tế bào chỉ gồm một phân tử lớn với một số phân tử DNA mạch vòng nhỏ được gọi là các plasmid.", mucDo:"H", dapAn:true },
+    { kyHieu:"c", noiDung:"Các phân tử DNA mạch kép ở sinh vật nhân thực hầu hết có cấu trúc dạng không vòng, một số ít có cấu trúc dạng mạch vòng nhỏ.", mucDo:"H", dapAn:true },
+    { kyHieu:"d", noiDung:"Số lượng các phân tử DNA trong tế bào cũng như trình tự sắp xếp các nucleotide trong mỗi phân tử DNA là không đặc trưng cho từng loài.", mucDo:"H", dapAn:false }
+  ],
+  giaiThich:"Ý d Sai vì số lượng phân tử DNA và trình tự sắp xếp các nucleotide là đặc trưng cho từng loài." },
+{ id:"SH10-DS02", bai:5, chuDe:"Các phân tử sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"ngan-hang",
+  noiDung:"Mỗi nhận định sau về vị trí của nucleic acid là Đúng hay Sai?",
+  cacY:[
+    { kyHieu:"a", noiDung:"DNA chủ yếu ở trong nhân tế bào.", mucDo:"B", dapAn:true },
+    { kyHieu:"b", noiDung:"DNA – Plasmid có ở tế bào chất.", mucDo:"B", dapAn:true },
+    { kyHieu:"c", noiDung:"RNA chủ yếu ở trong nhân tế bào.", mucDo:"H", dapAn:false },
+    { kyHieu:"d", noiDung:"DNA dạng mạch vòng có ở tế bào chất.", mucDo:"H", dapAn:true }
+  ],
+  giaiThich:"Ý c Sai vì RNA chủ yếu nằm ở tế bào chất (tham gia tổng hợp protein ở ribosome), không phải ở nhân." },
+// ---- Bài 2 (ma trận): tự soạn ----
+{ id:"SH10-DS03", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"bo-sung",
+  noiDung:"Một nhóm học sinh tìm hiểu ảnh hưởng của phân bón đến sự sinh trưởng của cây lúa. Mỗi nhận định sau đây là Đúng hay Sai?",
+  cacY:[
+    { kyHieu:"a", noiDung:"Quan sát sự sinh trưởng của cây lúa là một phương pháp nghiên cứu sinh học.", mucDo:"B", dapAn:true },
+    { kyHieu:"b", noiDung:"Nhóm cần trồng các chậu lúa trong điều kiện giống nhau, chỉ khác nhau về lượng phân bón để so sánh.", mucDo:"H", dapAn:true },
+    { kyHieu:"c", noiDung:"Nếu chậu bón nhiều phân nhất sinh trưởng tốt nhất thì kết luận 'bón càng nhiều phân càng tốt' là hợp lí.", mucDo:"VD", dapAn:false },
+    { kyHieu:"d", noiDung:"Kết quả nghiên cứu cần được ghi chép, xử lí và báo cáo một cách trung thực.", mucDo:"VD", dapAn:true }
+  ],
+  giaiThich:"Ý c Sai vì một lần quan sát chưa đủ để kết luận (cần lặp lại thí nghiệm), hơn nữa bón quá nhiều phân có thể gây hại cho cây." },
+{ id:"SH10-DS04", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"bo-sung",
+  noiDung:"Về phương pháp tin sinh học (bioinformatics), mỗi nhận định sau đây là Đúng hay Sai?",
+  cacY:[
+    { kyHieu:"a", noiDung:"Tin sinh học là công cụ hỗ trợ nghiên cứu và học tập môn Sinh học.", mucDo:"B", dapAn:true },
+    { kyHieu:"b", noiDung:"Tin sinh học giúp lưu trữ, so sánh và phân tích các trình tự DNA, protein trên máy tính.", mucDo:"H", dapAn:true },
+    { kyHieu:"c", noiDung:"Nhờ tin sinh học, nhà khoa học có thể dự đoán chức năng của một gene mà không cần làm thêm bất kì thí nghiệm kiểm chứng nào.", mucDo:"VD", dapAn:false },
+    { kyHieu:"d", noiDung:"Học sinh có thể dùng các cơ sở dữ liệu sinh học trực tuyến để tra cứu thông tin về gene, protein phục vụ học tập.", mucDo:"VD", dapAn:true }
+  ],
+  giaiThich:"Ý c Sai vì kết quả phân tích tin sinh học chỉ là dự đoán, vẫn cần thí nghiệm thực tế để kiểm chứng." },
+
+// ================= CÂU HỎI TRẢ LỜI NGẮN =================
+// ---- Bài 4 (ma trận): từ ngân hàng (mục CÂU HỎI TRẢ LỜI NGẮN, có đáp án trong file) ----
+{ id:"SH10-TLN01", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TLN", nguon:"ngan-hang",
+  noiDung:"Cho các phân tử sau đây: lipid, protein, vitamin, glucose, tinh bột. Có bao nhiêu phân tử được cấu tạo nên từ nguyên tố đa lượng?",
+  dapAn:["5","5 phân tử","năm","năm phân tử"],
+  giaiThich:"Cả 5 phân tử đều được cấu tạo từ các nguyên tố đa lượng (C, H, O...)." },
+{ id:"SH10-TLN02", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TLN", nguon:"ngan-hang",
+  noiDung:"Trong tế bào có thể có mặt hầu hết các nguyên tố trong tự nhiên (92 nguyên tố), khoảng 25 nguyên tố quan trọng với sự sống. Trong đó có bao nhiêu nguyên tố chiếm phần lớn trong cơ thể sống (khoảng 96%)?",
+  dapAn:["4","4 nguyên tố","bốn","bốn nguyên tố"],
+  giaiThich:"4 nguyên tố C, H, O, N chiếm khoảng 96% khối lượng cơ thể sống." },
+{ id:"SH10-TLN03", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TLN", nguon:"ngan-hang",
+  noiDung:"Các nguyên tố hoá học được chia thành nguyên tố đa lượng và nguyên tố vi lượng. Trong các vai trò: cấu tạo tế bào, cấu tạo enzyme, cấu tạo các đại phân tử hữu cơ, cấu tạo hormone, điều tiết quá trình trao đổi chất — có bao nhiêu vai trò là của nhóm nguyên tố vi lượng?",
+  dapAn:["3","3 vai trò","ba","ba vai trò"],
+  giaiThich:"Nguyên tố vi lượng tham gia: cấu tạo enzyme, cấu tạo hormone và điều tiết quá trình trao đổi chất trong tế bào." },
+{ id:"SH10-TLN04", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TLN", nguon:"ngan-hang",
+  noiDung:"Khi nói về vai trò sinh học của nước đối với tế bào, có bao nhiêu phát biểu sau đây đúng? (1) Môi trường khuếch tán và hòa tan các chất. (2) Cân bằng và ổn định nhiệt độ của tế bào và cơ thể. (3) Nguyên liệu tham gia phản ứng hóa sinh. (4) Thành phần chủ yếu cấu tạo nên tế bào. (5) Cung cấp năng lượng cho các hoạt động sống của tế bào.",
+  dapAn:["4","4 phát biểu","bốn","bốn phát biểu"],
+  giaiThich:"Các phát biểu (1), (2), (3), (4) đúng; phát biểu (5) sai vì nước không cung cấp năng lượng." },
+{ id:"SH10-TLN05", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TLN", nguon:"ngan-hang",
+  noiDung:"Cho các phát biểu: (1) Phân tử nước được cấu tạo bằng liên kết hóa trị không phân cực giữa 2 nguyên tử H và 1 nguyên tử O. (2) Các phân tử nước có khả năng tương tác với nhau và hình thành nên mạng lưới nước. (3) Liên kết giữa các phân tử nước được gọi là liên kết hydrogen. (4) Trong phân tử nước, nguyên tử O mang điện tích dương, nguyên tử H mang điện tích âm. (5) Khi ở trạng thái đông cứng, các liên kết hydrogen luôn bền vững. Có bao nhiêu phát biểu sai?",
+  dapAn:["2","2 phát biểu","hai","hai phát biểu"],
+  giaiThich:"Phát biểu (1) và (4) sai: liên kết trong phân tử nước là cộng hóa trị phân cực; nguyên tử O mang điện tích âm, H mang điện tích dương." },
+// ---- Bài 3 (ma trận): tự soạn ----
+{ id:"SH10-TLN06", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TLN", nguon:"bo-sung",
+  noiDung:"Tập hợp nhiều quần thể của các loài khác nhau cùng sống trong một không gian xác định được gọi là gì?",
+  dapAn:["quần xã","quần xã sinh vật"],
+  giaiThich:"Quần xã sinh vật gồm nhiều quần thể của các loài khác nhau cùng sống trong một không gian xác định." },
+{ id:"SH10-TLN07", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TLN", nguon:"bo-sung",
+  noiDung:"Trong các cấp độ: tế bào, cơ thể, quần thể, quần xã, hệ sinh thái — cấp độ tổ chức sống lớn nhất là gì?",
+  dapAn:["hệ sinh thái"],
+  giaiThich:"Theo nguyên tắc thứ bậc, hệ sinh thái là cấp độ tổ chức lớn nhất trong các cấp độ đã học." },
+{ id:"SH10-TLN08", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TLN", nguon:"bo-sung",
+  noiDung:"Đặc tính mà tổ chức sống cấp trên có nhưng các cấp tổ chức sống cấp dưới không có được gọi là gì?",
+  dapAn:["đặc tính nổi trội","tính nổi trội","đặc tính nổi bật"],
+  giaiThich:"Đặc tính nổi trội hình thành do sự tương tác giữa các bộ phận cấu thành nên cấp tổ chức cao hơn." },
+// ---- Bài 5 (ma trận): tự soạn ----
+{ id:"SH10-TLN09", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TLN", nguon:"bo-sung",
+  noiDung:"Đơn phân cấu tạo nên protein là gì?",
+  dapAn:["acid amin","axit amin","amino acid","amino axit"],
+  giaiThich:"Protein được cấu tạo theo nguyên tắc đa phân với đơn phân là acid amin." },
+{ id:"SH10-TLN10", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TLN", nguon:"bo-sung",
+  noiDung:"Liên kết hóa học chủ yếu nối các acid amin trong phân tử protein được gọi là gì?",
+  dapAn:["liên kết peptit","liên kết peptid","liên kết peptide"],
+  giaiThich:"Các acid amin liên kết với nhau bằng liên kết peptit tạo thành chuỗi polipeptit." },
+{ id:"SH10-TLN11", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TLN", nguon:"bo-sung",
+  noiDung:"Loại đường đa nào tham gia cấu tạo nên thành tế bào thực vật?",
+  dapAn:["xenlulozơ","xenlulozo","xenluloz","cellulose"],
+  giaiThich:"Xenlulozơ (cellulose) là đường đa cấu tạo nên thành tế bào thực vật." },
+{ id:"SH10-TLN12", bai:5, chuDe:"Các phân tử sinh học", mucDo:"VD", loai:"TLN", nguon:"bo-sung",
+  noiDung:"Nhỏ dung dịch iot vào một mẫu thử thấy xuất hiện màu xanh tím. Mẫu thử đó chứa loại đường nào?",
+  dapAn:["tinh bột"],
+  giaiThich:"Dung dịch iot gặp tinh bột cho màu xanh tím đặc trưng — cách nhận biết tinh bột." },
+{ id:"SH10-TLN13", bai:5, chuDe:"Các phân tử sinh học", mucDo:"VD", loai:"TLN", nguon:"bo-sung",
+  noiDung:"Hormone insulin do tuyến tụy tiết ra được cấu tạo từ loại phân tử sinh học nào?",
+  dapAn:["protein","prôtêin","protein","chất đạm","đạm"],
+  giaiThich:"Insulin là một loại protein (hormone có bản chất protein)." },
+{ id:"SH10-TLN14", bai:5, chuDe:"Các phân tử sinh học", mucDo:"VD", loai:"TLN", nguon:"bo-sung",
+  noiDung:"Trong xác định huyết thống và truy tìm tội phạm, người ta phân tích loại phân tử sinh học nào?",
+  dapAn:["dna","adn","axit nucleic","acid nucleic","nucleic acid"],
+  giaiThich:"Trình tự nucleotide trên DNA mang thông tin di truyền đặc trưng cho từng cá thể nên được dùng để xác định huyết thống, truy tìm tội phạm." },
+
+// ================= CÂU HỎI TỰ LUẬN =================
+{ id:"SH10-TL01", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TL", nguon:"ngan-hang", diemToiDa:1,
+  noiDung:"Trình bày nội dung cơ bản của học thuyết tế bào?",
+  huongDanCham:"ý 1 (0.25đ): Mọi cơ thể sống (đơn bào và đa bào) đều được cấu tạo từ tế bào.\ný 2 (0.25đ): Tế bào là đơn vị cấu trúc và chức năng cơ sở của sự sống.\ný 3 (0.25đ): Mọi tế bào đều được sinh ra từ các tế bào có trước bằng cách phân chia.\ný 4 (0.25đ): Trình bày mạch lạc, đầy đủ cả ba nội dung trên.",
+  giaiThich:"Ba nội dung cơ bản của học thuyết tế bào: (1) mọi sinh vật đều được cấu tạo từ tế bào; (2) tế bào là đơn vị cơ sở của sự sống; (3) tế bào mới được sinh ra từ tế bào có trước." },
+{ id:"SH10-TL02", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TL", nguon:"bo-sung", diemToiDa:1,
+  noiDung:"Giải thích vì sao tế bào được coi là đơn vị cấu trúc và chức năng của cơ thể sống. Cho một ví dụ minh họa.",
+  huongDanCham:"ý 1 (0.25đ): Đơn vị cấu trúc: mọi cơ thể sống đều được cấu tạo từ tế bào.\ný 2 (0.25đ): Đơn vị chức năng: mọi hoạt động sống của cơ thể đều được thực hiện nhờ hoạt động của tế bào.\ný 3 (0.25đ): Giải thích được mối liên hệ: tế bào thực hiện các hoạt động sống (chuyển hóa vật chất và năng lượng, sinh sản...) tạo nên hoạt động sống của cơ thể.\ný 4 (0.25đ): Cho ví dụ đúng và phù hợp (VD: tế bào hồng cầu vận chuyển O2 đi nuôi cơ thể; tế bào cơ co rút giúp cơ thể vận động...).",
+  giaiThich:"Tế bào là đơn vị cấu trúc (mọi cơ thể đều cấu tạo từ tế bào) và đơn vị chức năng (mọi hoạt động sống của cơ thể đều dựa trên hoạt động của tế bào)." },
+{ id:"SH10-TL03", bai:5, chuDe:"Các phân tử sinh học", mucDo:"VD", loai:"TL", nguon:"bo-sung", diemToiDa:1,
+  noiDung:"Một người muốn giảm cân nên quyết định loại bỏ hoàn toàn chất béo (lipid) khỏi khẩu phần ăn hằng ngày. Vận dụng kiến thức về các phân tử sinh học, em hãy cho biết quyết định này có hợp lí không? Vì sao?",
+  huongDanCham:"ý 1 (0.25đ): Không hợp lí (không nên loại bỏ hoàn toàn lipid khỏi khẩu phần ăn).\ný 2 (0.25đ): Lipid là nguồn dự trữ và cung cấp năng lượng quan trọng cho tế bào và cơ thể.\ný 3 (0.25đ): Lipid tham gia cấu tạo màng tế bào; là dung môi hòa tan các vitamin A, D, E, K; một số hormone được cấu tạo từ lipid (steroid).\ný 4 (0.25đ): Thiếu lipid gây rối loạn chuyển hóa, thiếu vitamin tan trong dầu, ảnh hưởng xấu đến sức khỏe — nên ăn uống hợp lí, hạn chế chứ không loại bỏ hoàn toàn.",
+  giaiThich:"Loại bỏ hoàn toàn lipid là không hợp lí vì lipid vừa cung cấp, dự trữ năng lượng, vừa cấu tạo màng tế bào, hòa tan vitamin A, D, E, K và tạo một số hormone." },
+
+];
+
+
+/* =====================================================================
+   PHẦN 4: LOGIC LÀM BÀI
+   ===================================================================== */
+const state = {
+  dsCau: [], cauHienTai: 0, traLoi: {},
+  batDau: 0, timerId: null, conLai: 0,
+  daNop: false, ketQua: null, hoTen: "", lop: ""
+};
+
+function $(id){ return document.getElementById(id); }
+function tronMang(a){
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function hienManHinh(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function thoatHTML(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function giayThanhChu(s){
+  s=Math.max(0,Math.floor(s));
+  const p=Math.floor(s/60), g=s%60;
+  return (p<10?'0':'')+p+':'+(g<10?'0':'')+g;
+}
+function tenMucDo(m){
+  return m==='B'?'Nhận biết':(m==='H'?'Thông hiểu':(m==='VD'?'Vận dụng':'Tổng hợp'));
+}
+function tenBai(b){ return 'Bài '+b; }
+function tenPhanCau(c){
+  if(c.phan===2) return 'Phần II — Tự luận';
+  return 'Phần I — '+(c.loai==='TN'?'Trắc nghiệm':(c.loai==='DS'?'Đúng / Sai':'Trả lời ngắn'));
+}
+function lamTron(d){ return Math.round(d*100)/100; }
+function demTu(s){ return String(s||'').trim().split(/\s+/).filter(Boolean).length; }
+
+/* Chuẩn hóa câu trả lời ngắn: bỏ hoa/thường, dấu câu, khoảng trắng thừa */
+function chuanHoaTLN(s){
+  return String(s||'').toLowerCase().trim()
+    .replace(/[.,;:!?(){}\[\]"'“”‘’\-–—\/\\+]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+function dungTLN(cau, traLoi){
+  const ch=chuanHoaTLN(traLoi);
+  if(!ch) return false;
+  return cau.dapAn.some(da=>chuanHoaTLN(da)===ch);
+}
+
+/* ---------- BỐC ĐỀ NGẪU NHIÊN THEO MA TRẬN ---------- */
+function tronDapAnTN(cau){
+  const c = JSON.parse(JSON.stringify(cau));
+  const order = c.luaChon.map((_,i)=>i);
+  tronMang(order);
+  c.luaChon = order.map(i=>cau.luaChon[i]);
+  c.dapAn = order.indexOf(cau.dapAn);
+  return c;
+}
+function bocTheoSlot(danhSachSlot, loai){
+  const de=[];
+  danhSachSlot.forEach(slot=>{
+    const pool = NGAN_HANG_SINH10.filter(q=>q.loai===loai && q.bai===slot.bai && (slot.mucDo? q.mucDo===slot.mucDo : true));
+    const chon = tronMang(pool.slice()).slice(0, slot.soCau);
+    chon.forEach(q=>{
+      const c = (loai==='TN') ? tronDapAnTN(q) : JSON.parse(JSON.stringify(q));
+      de.push(c);
+    });
+  });
+  return de;
+}
+function buildDeThi(){
+  const de=[];
+  bocTheoSlot(MA_TRAN.tracnghiem,'TN').forEach(c=>{ c.phan=1; de.push(c); });
+  bocTheoSlot(MA_TRAN.dungsai,'DS').forEach(c=>{ c.phan=1; de.push(c); });
+  bocTheoSlot(MA_TRAN.traloiNgan,'TLN').forEach(c=>{ c.phan=1; de.push(c); });
+  bocTheoSlot(MA_TRAN.tuluuan,'TL').forEach(c=>{ c.phan=2; de.push(c); });
+  return de;
+}
+
+/* ---------- MÀN HÌNH: THÔNG TIN ---------- */
+function vaoLamBai(){
+  const hoTen=$('o-ho-ten').value.trim();
+  const lop=$('o-lop').value.trim();
+  if(hoTen.length<2){ $('loi-thong-tin').textContent='Em nhập họ tên đầy đủ nhé.'; return; }
+  if(lop.length<2){ $('loi-thong-tin').textContent='Em nhập lớp của mình nhé (VD: 10A1).'; return; }
+  $('loi-thong-tin').textContent='';
+  state.hoTen=hoTen; state.lop=lop;
+  batDauLamBai();
+}
+
+/* ---------- MÀN HÌNH: LÀM BÀI ---------- */
+function batDauLamBai(){
+  state.dsCau=buildDeThi();
+  state.cauHienTai=0; state.traLoi={}; state.daNop=false; state.ketQua=null;
+  state.batDau=Date.now();
+  state.conLai=CONFIG.GIOI_HAN_PHUT*60;
+  clearInterval(state.timerId);
+  if(CONFIG.GIOI_HAN_PHUT>0){ state.timerId=setInterval(capNhatDongHo,1000); }
+  capNhatDongHo();
+  $('luoi-cau-hoi').classList.remove('mo');
+  $('nut-luoi-cau').classList.remove('mo');
+  veCauHoi();
+  hienManHinh('man-hinh-lam-bai');
+}
+function capNhatDongHo(){
+  $('dong-ho-so').textContent=giayThanhChu(state.conLai);
+  $('dong-ho').classList.toggle('het-gio', state.conLai<=300);
+  if(CONFIG.GIOI_HAN_PHUT>0 && state.conLai<=0){ clearInterval(state.timerId); nopBai(true); return; }
+  state.conLai--;
+}
+function cauDangLam(){ return state.dsCau[state.cauHienTai]; }
+function daTraLoi(c){
+  const tl=state.traLoi[c.id];
+  if(tl===undefined||tl===null) return false;
+  if(c.loai==='TN') return tl.chon!==null && tl.chon!==undefined;
+  if(c.loai==='DS') return tl.y.every(x=>x!==null);
+  return String(tl.text||'').trim().length>0; // TLN, TL
+}
+
+function veCauHoi(){
+  const c=cauDangLam(), tong=state.dsCau.length, i=state.cauHienTai;
+  $('ten-phan').textContent=tenPhanCau(c);
+  $('tien-do-chu').textContent='Câu '+(i+1)+' / '+tong;
+  $('thanh-tien-do').style.width=((i+1)/tong*100)+'%';
+  const tl=state.traLoi[c.id];
+  let html='<div class="q-meta"><span class="q-chip'+(c.phan===2?' q-phan2':'')+'">Câu '+(i+1)+'</span>'
+         +'<span class="q-mucdo">'+thoatHTML(tenBai(c.bai))+' · '+tenMucDo(c.mucDo)+'</span></div>'
+         +'<div class="q-noidung">'+thoatHTML(c.noiDung)+'</div>';
+
+  if(c.loai==='TN'){
+    const chu=['A','B','C','D'];
+    c.luaChon.forEach((lc,idx)=>{
+      const cls='opt'+(tl&&tl.chon===idx?' chon':'');
+      html+='<button class="'+cls+'" data-idx="'+idx+'"><span class="opt-letter">'+chu[idx]+'</span><span>'+thoatHTML(lc)+'</span></button>';
+    });
+  }else if(c.loai==='DS'){
+    c.cacY.forEach((y,idx)=>{
+      const chon=tl?tl.y[idx]:null;
+      html+='<div class="ds-y"><div class="ds-text"><b>'+y.kyHieu+'.</b> '+thoatHTML(y.noiDung)+'</div><div class="ds-btns">'
+          +'<button class="ds-btn'+(chon===true?' chon-dung':'')+'" data-y="'+idx+'" data-v="1">Đúng</button>'
+          +'<button class="ds-btn'+(chon===false?' chon-sai':'')+'" data-y="'+idx+'" data-v="0">Sai</button>'
+          +'</div></div>';
+    });
+  }else if(c.loai==='TLN'){
+    const val=tl?thoatHTML(tl.text):'';
+    html+='<input class="tln-input" id="o-tln" type="text" placeholder="Em gõ đáp án ngắn gọn vào đây…" value="'+val+'" maxlength="120" autocomplete="off">'
+        +'<div class="tl-hint">Chỉ cần ý chính, viết ngắn gọn (VD: tên chất, con số, cụm từ).</div>';
+  }else{ // TL
+    const val=tl?thoatHTML(tl.text):'';
+    const soTu=tl?demTu(tl.text):0;
+    html+='<textarea class="tl-textarea" id="o-tl" placeholder="Em trình bày bài làm thành đoạn văn ở đây…">'+val+'</textarea>'
+        +'<div class="tl-hint" id="dem-tu-tl">Số từ: '+soTu+' · Bài này cô/chú sẽ chấm sau khi em nộp.</div>';
+  }
+  $('the-cau-hoi').innerHTML=html;
+
+  $('the-cau-hoi').querySelectorAll('.opt').forEach(b=>{
+    b.addEventListener('click',()=>{
+      state.traLoi[c.id]={chon:parseInt(b.getAttribute('data-idx'))};
+      veCauHoi(); veLuoi();
+    });
+  });
+  $('the-cau-hoi').querySelectorAll('.ds-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const yi=parseInt(b.getAttribute('data-y')), v=b.getAttribute('data-v')==='1';
+      if(!state.traLoi[c.id]) state.traLoi[c.id]={y:[null,null,null,null]};
+      state.traLoi[c.id].y[yi]=v;
+      veCauHoi(); veLuoi();
+    });
+  });
+  const oTln=$('o-tln');
+  if(oTln){
+    oTln.addEventListener('input',()=>{
+      state.traLoi[c.id]={text:oTln.value};
+      veLuoi();
+    });
+  }
+  const oTl=$('o-tl');
+  if(oTl){
+    oTl.addEventListener('input',()=>{
+      state.traLoi[c.id]={text:oTl.value};
+      const dt=$('dem-tu-tl');
+      if(dt) dt.textContent='Số từ: '+demTu(oTl.value)+' · Bài này cô/chú sẽ chấm sau khi em nộp.';
+      veLuoi();
+    });
+  }
+
+  $('nut-quay-lai').disabled=(i===0);
+  $('nut-tiep-theo').textContent=(i===tong-1)?'Nộp bài':'Câu tiếp ›';
+  veLuoi();
+}
+/* ---------- LƯỚI ĐIỀU HƯỚNG 25 CÂU ---------- */
+function veLuoi(){
+  let html='';
+  state.dsCau.forEach((c,i)=>{
+    let cls='p-cell';
+    if(daTraLoi(c)) cls+=' lam';
+    if(i===state.cauHienTai) cls+=' hien-tai';
+    html+='<button class="'+cls+'" data-i="'+i+'">'+(i+1)+'</button>';
+  });
+  $('luoi-o-cau').innerHTML=html;
+  $('luoi-o-cau').querySelectorAll('.p-cell').forEach(b=>{
+    b.addEventListener('click',()=>{
+      state.cauHienTai=parseInt(b.getAttribute('data-i'));
+      $('luoi-cau-hoi').classList.remove('mo');
+      $('nut-luoi-cau').classList.remove('mo');
+      veCauHoi();
+    });
+  });
+}
+function soCauChuaLam(){
+  return state.dsCau.filter(c=>!daTraLoi(c)).length;
+}
+function xacNhanNop(){
+  const thieu=soCauChuaLam();
+  if(thieu>0){
+    if(!confirm('Em còn '+thieu+' câu chưa trả lời. Vẫn nộp bài chứ?')) return;
+  }else{
+    if(!confirm('Em đã làm hết '+TONG_CAU+' câu. Nộp bài nhé?')) return;
+  }
+  nopBai(false);
+}
+
+/* ---------- CHẤM ĐIỂM ----------
+   TN: 0,25đ/câu · ĐS: 0,25đ/ý · TLN: 0,25đ/câu · TL: chờ GV chấm */
+function chamDiem(){
+  let dTN=0, dDS=0, dTLN=0;
+  const chiTiet=[]; const theoChuDe={}; const baiLamTL=[];
+  state.dsCau.forEach(c=>{
+    const tl=state.traLoi[c.id];
+    let diem=0, dungHoanToan=false, yKetQua=[], chon=null, text='', kqTLN=null;
+    if(c.loai==='TN'){
+      chon=(tl&&tl.chon!==undefined)?tl.chon:null;
+      dungHoanToan=(chon===c.dapAn);
+      diem=dungHoanToan?DIEM.TN:0; dTN=lamTron(dTN+diem);
+    }else if(c.loai==='DS'){
+      let dungY=0;
+      c.cacY.forEach((y,idx)=>{
+        const chonY=tl?tl.y[idx]:null;
+        const ok=(chonY===y.dapAn);
+        if(ok) dungY++;
+        yKetQua.push({kyHieu:y.kyHieu,noiDung:y.noiDung,dung:y.dapAn,chon:chonY,ok:ok});
+      });
+      diem=lamTron(dungY*DIEM.DS_Y); dungHoanToan=(dungY===c.cacY.length); dDS=lamTron(dDS+diem);
+    }else if(c.loai==='TLN'){
+      text=tl?String(tl.text||'').trim():'';
+      kqTLN=text?dungTLN(c,text):false; dungHoanToan=kqTLN;
+      diem=dungHoanToan?DIEM.TLN:0; dTLN=lamTron(dTLN+diem);
+    }else{ // TL — không chấm máy
+      text=tl?String(tl.text||'').trim():'';
+      baiLamTL.push({maCau:c.id, cauHoi:c.noiDung, baiLam:text, soTu:demTu(text)});
+    }
+    if(c.phan===1){
+      if(!theoChuDe[c.chuDe]) theoChuDe[c.chuDe]={duoc:0,tong:0};
+      const toiDa=c.loai==='TN'?DIEM.TN:(c.loai==='DS'?c.cacY.length*DIEM.DS_Y:DIEM.TLN);
+      theoChuDe[c.chuDe].duoc=lamTron(theoChuDe[c.chuDe].duoc+diem);
+      theoChuDe[c.chuDe].tong=lamTron(theoChuDe[c.chuDe].tong+toiDa);
+    }
+    chiTiet.push({cau:c,diem:diem,dungHoanToan:dungHoanToan,chon:chon,yKetQua:yKetQua,text:text,kqTLN:kqTLN});
+  });
+  const dP1=lamTron(dTN+dDS+dTLN);
+  return {dTN:dTN,dDS:dDS,dTLN:dTLN,dP1:dP1,chiTiet:chiTiet,theoChuDe:theoChuDe,baiLamTL:baiLamTL};
+}
+function nopBai(hetGio){
+  if(state.daNop) return;
+  state.daNop=true;
+  clearInterval(state.timerId);
+  const kq=chamDiem();
+  const giayLam=Math.floor((Date.now()-state.batDau)/1000);
+  const ma='SH10-'+Date.now().toString(36).slice(-4).toUpperCase()
+           +Math.random().toString(36).slice(2,4).toUpperCase();
+  state.ketQua={
+    hoTen:state.hoTen, lop:state.lop, bai:'Kiểm tra giữa kỳ I (theo ma trận)',
+    diemP1:kq.dP1, diemTN:kq.dTN, diemDS:kq.dDS, diemTLN:kq.dTLN,
+    trangThaiTuLuan:'Chờ chấm', diemTamTinh:kq.dP1,
+    tongSoCau:state.dsCau.length,
+    thoiGianGiay:giayLam, thoiGianChu:giayThanhChu(giayLam),
+    maKetQua:ma, thoiDiemNop:new Date().toISOString(),
+    maCauSai:kq.chiTiet.filter(x=>x.cau.phan===1&&!x.dungHoanToan).map(x=>x.cau.id),
+    chiTiet:kq.chiTiet, theoChuDe:kq.theoChuDe, baiLamTL:kq.baiLamTL, hetGio:!!hetGio
+  };
+  veKetQua();
+  hienManHinh('man-hinh-ket-qua');
+  guiKetQua();
+}
+
+/* ---------- MÀN HÌNH KẾT QUẢ ---------- */
+function veKetQua(){
+  const kq=state.ketQua;
+  $('diem-so').textContent=kq.diemP1;
+  $('diem-so-chu').textContent='/ 7 điểm trắc nghiệm (tạm tính)';
+  const C=402.1;
+  $('vong-diem').style.strokeDashoffset=C*(1-kq.diemP1/7);
+  $('vong-diem').setAttribute('stroke',kq.diemP1>=5.6?'#2E7D32':(kq.diemP1>=3.5?'#0288D1':'#D32F2F'));
+  $('diem-phan-1').textContent=kq.diemP1+'đ';
+  $('diem-phan-2').textContent='Chờ chấm';
+
+  const p1=kq.chiTiet.filter(x=>x.cau.phan===1);
+  const dungHT=p1.filter(x=>x.dungHoanToan).length;
+  $('tom-tat-ket-qua').innerHTML=
+    '<div class="ket-qua-dong">Phần I: đúng hoàn toàn '+dungHT+' / '+p1.length+' câu</div>'
+    +'<div class="ket-qua-dong" style="color:var(--chu-phu)">Phần II: 3 câu tự luận đang chờ cô/chú chấm (+3,0đ)</div>'
+    +'<p class="muted">Thời gian làm bài: '+kq.thoiGianChu+(kq.hetGio?' (hết giờ)':'')+' · '+thoatHTML(kq.hoTen)+' · Lớp '+thoatHTML(kq.lop)+'</p>';
+
+  let yeuNhat=null, tiLeThap=2;
+  Object.keys(kq.theoChuDe).forEach(cd=>{
+    const t=kq.theoChuDe[cd], tiLe=t.tong>0?t.duoc/t.tong:1;
+    if(tiLe<1&&tiLe<tiLeThap){ tiLeThap=tiLe; yeuNhat=cd; }
+  });
+  const d=kq.diemP1;
+  let loi='';
+  if(d>=6.3)      loi='Tuyệt vời! Phần trắc nghiệm em nắm rất chắc. Giờ chờ điểm tự luận nữa nhé!';
+  else if(d>=5.6) loi='Giỏi lắm! Trắc nghiệm tốt rồi, chỉ cần rà soát lại vài chỗ nhỏ nữa.';
+  else if(d>=4.5) loi='Khá tốt đấy! Em đã nắm được phần lớn kiến thức, cố thêm chút nữa nhé.';
+  else if(d>=3.5) loi='Em đã cố gắng rồi! Hãy xem lại đáp án và giải thích bên dưới, rồi làm đề mới một lượt nữa nhé.';
+  else            loi='Đừng nản nhé! Em hãy đọc kỹ phần giải thích từng câu, ôn lại bài rồi thử đề mới — cô tin em sẽ tiến bộ nhanh thôi.';
+  $('loi-nhan-xet').textContent=loi;
+  if(yeuNhat){
+    $('goi-y-on-lai').style.display='block';
+    $('goi-y-on-lai').innerHTML='<b>Gợi ý cho em:</b> nên ôn lại phần <b>"'+thoatHTML(yeuNhat)+'"</b> trong sách giáo khoa nhé.';
+  }else{ $('goi-y-on-lai').style.display='none'; }
+
+  let html='', tieuDePhan='';
+  kq.chiTiet.forEach((x,i)=>{
+    const c=x.cau;
+    const tieuDeMoi = c.phan===1 ? 'Phần I — Trắc nghiệm ('+c.loai+')' : 'Phần II — Tự luận';
+    if(tieuDeMoi!==tieuDePhan || (c.phan===1 && x.cau.loai!==kq.chiTiet[i-1]?.cau.loai)){
+      tieuDePhan=tieuDeMoi;
+      const tenHien = c.phan===1
+        ? 'Phần I — '+(c.loai==='TN'?'Trắc nghiệm nhiều lựa chọn':(c.loai==='DS'?'Trắc nghiệm đúng/sai':'Trả lời ngắn'))
+        : 'Phần II — Tự luận';
+      html+='<h3 class="section-title" style="margin-top:6px">'+tenHien+'</h3>';
+    }
+    if(c.phan===2){
+      html+='<div class="review"><div class="review-head"><span class="badge cho">Chờ chấm</span><span>Câu '+(i+1)+': '+thoatHTML(c.noiDung)+'</span></div>';
+      html+='<div class="dap-an">Bài làm của em:</div><div class="tl-bai-lam">'+(x.text?thoatHTML(x.text):'<span class="muted">— em chưa viết bài —</span>')+'</div>';
+      html+='<div class="giai-thich"><b>Hướng dẫn chấm (để em tự đối chiếu):</b><br>'+thoatHTML(c.huongDanCham).replace(/\n/g,'<br>')+'</div></div>';
+      return;
+    }
+    html+='<div class="review"><div class="review-head"><span class="badge '+(x.dungHoanToan?'dung':'sai')+'">'
+        +(x.dungHoanToan?'Đúng':'Chưa đúng')+'</span><span>Câu '+(i+1)+': '+thoatHTML(c.noiDung)+'</span></div>';
+    if(c.loai==='TN'){
+      const chu=['A','B','C','D'];
+      html+='<div class="dap-an">Em chọn: <b>'+(x.chon===null?'— chưa trả lời —':chu[x.chon]+'. '+thoatHTML(c.luaChon[x.chon]))+'</b>'
+          +'<br>Đáp án đúng: <b style="color:var(--xanh-rung)">'+chu[c.dapAn]+'. '+thoatHTML(c.luaChon[c.dapAn])+'</b></div>';
+    }else if(c.loai==='DS'){
+      x.yKetQua.forEach(y=>{
+        const mau=y.ok?'var(--xanh-rung)':'var(--sai)';
+        html+='<div class="ds-review" style="color:'+mau+'"><b>'+(y.ok?'✓':'✗')+'</b> '+y.kyHieu+'. '+thoatHTML(y.noiDung)
+            +' <span class="muted">(Em: '+(y.chon===null?'chưa chọn':(y.chon?'Đúng':'Sai'))+' · Đáp án: '+(y.dung?'Đúng':'Sai')+')</span></div>';
+      });
+    }else{ // TLN
+      html+='<div class="dap-an">Em viết: <b>'+(x.text?thoatHTML(x.text):'— chưa trả lời —')+'</b>'
+          +'<br>Đáp án: <b style="color:var(--xanh-rung)">'+thoatHTML(c.dapAn[0])+'</b></div>';
+    }
+    html+='<div class="giai-thich"><b>Giải thích:</b> '+thoatHTML(c.giaiThich)+'</div></div>';
+  });
+  $('chi-tiet-cau').innerHTML=html;
+
+  $('ma-ket-qua').textContent=kq.maKetQua;
+  $('nut-lam-lai').style.display=CONFIG.CHO_PHEP_LAM_LAI?'':'none';
+}
+
+/* ---------- GỬI KẾT QUẢ VỀ GOOGLE SHEETS ---------- */
+function payloadGui(){
+  const kq=state.ketQua;
+  return {
+    hoTen:kq.hoTen, lop:kq.lop, bai:kq.bai,
+    diemP1:kq.diemP1, diemTN:kq.diemTN, diemDS:kq.diemDS, diemTLN:kq.diemTLN,
+    trangThaiTuLuan:kq.trangThaiTuLuan, diemTamTinh:kq.diemTamTinh,
+    thoiGianLamGiay:kq.thoiGianGiay, thoiGianLam:kq.thoiGianChu,
+    maCauSai:kq.maCauSai.join(', '), tongSoCau:kq.tongSoCau,
+    thoiDiemNop:kq.thoiDiemNop, maKetQua:kq.maKetQua,
+    baiLamTuLuan:kq.baiLamTL
+  };
+}
+function datTrangThaiGui(loai,chu){
+  const el=$('trang-thai-gui');
+  el.className='send-status '+loai; el.textContent=chu;
+}
+function luuChoGui(payload){
+  try{
+    const k='sh10_ketqua_cho_gui';
+    const ds=JSON.parse(localStorage.getItem(k)||'[]');
+    ds.push(payload);
+    localStorage.setItem(k,JSON.stringify(ds));
+  }catch(e){}
+}
+async function guiMotKetQua(payload){
+  const res=await fetch(CONFIG.APPS_SCRIPT_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(payload)
+  });
+  await res.text();
+  if(!res.ok) throw new Error('Máy chủ trả lỗi '+res.status);
+}
+async function guiKetQua(){
+  const payload=payloadGui();
+  $('nut-gui-lai').style.display='none';
+  if(!CONFIG.APPS_SCRIPT_URL){
+    datTrangThaiGui('loi','Giáo viên chưa cấu hình địa chỉ gửi. Kết quả đã lưu tạm trên máy này — em nhớ chụp màn hình mã kết quả nhé.');
+    luuChoGui(payload);
+    $('nut-gui-lai').style.display='block';
+    return;
+  }
+  datTrangThaiGui('dang','Đang gửi kết quả cho giáo viên...');
+  try{
+    await guiMotKetQua(payload);
+    datTrangThaiGui('ok','Đã gửi kết quả thành công cho giáo viên.');
+  }catch(e){
+    luuChoGui(payload);
+    datTrangThaiGui('loi','Chưa gửi được (mất mạng hoặc lỗi kết nối). Kết quả đã lưu tạm trên máy — em bấm "Gửi lại" khi có mạng, hoặc chụp màn hình mã kết quả để nộp.');
+    $('nut-gui-lai').style.display='block';
+  }
+}
+async function guiLai(){
+  $('nut-gui-lai').style.display='none';
+  datTrangThaiGui('dang','Đang gửi lại...');
+  const k='sh10_ketqua_cho_gui';
+  let ds=[];
+  try{ ds=JSON.parse(localStorage.getItem(k)||'[]'); }catch(e){}
+  ds.push(payloadGui());
+  const conLai=[];
+  for(const p of ds){
+    try{ await guiMotKetQua(p); }
+    catch(e){ conLai.push(p); }
+  }
+  try{ localStorage.setItem(k,JSON.stringify(conLai)); }catch(e){}
+  if(conLai.length===0) datTrangThaiGui('ok','Đã gửi thành công tất cả kết quả còn tồn.');
+  else{
+    datTrangThaiGui('loi','Vẫn chưa gửi được. Kết quả đang lưu tạm trên máy — em thử lại sau hoặc chụp màn hình mã kết quả.');
+    $('nut-gui-lai').style.display='block';
+  }
+}
+
+/* ---------- KHỞI ĐỘNG ---------- */
+document.addEventListener('DOMContentLoaded',()=>{
+  $('nut-bat-dau').addEventListener('click',()=>hienManHinh('man-hinh-thong-tin'));
+  $('nut-tro-ve-chinh').addEventListener('click',()=>hienManHinh('man-hinh-chinh'));
+  $('nut-vao-lam-bai').addEventListener('click',vaoLamBai);
+  $('nut-luoi-cau').addEventListener('click',()=>{
+    $('luoi-cau-hoi').classList.toggle('mo');
+    $('nut-luoi-cau').classList.toggle('mo');
+  });
+  $('nut-nop-tu-luoi').addEventListener('click',xacNhanNop);
+  $('nut-quay-lai').addEventListener('click',()=>{
+    if(state.cauHienTai>0){ state.cauHienTai--; veCauHoi(); }
+  });
+  $('nut-tiep-theo').addEventListener('click',()=>{
+    if(state.cauHienTai<state.dsCau.length-1){ state.cauHienTai++; veCauHoi(); }
+    else xacNhanNop();
+  });
+  $('nut-gui-lai').addEventListener('click',guiLai);
+  $('nut-ve-trang-chu').addEventListener('click',()=>{
+    clearInterval(state.timerId);
+    hienManHinh('man-hinh-chinh');
+  });
+  $('nut-lam-lai').addEventListener('click',()=>batDauLamBai());
+});
+</script>
+</body>
+</html>
