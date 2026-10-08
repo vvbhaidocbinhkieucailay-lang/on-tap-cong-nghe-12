@@ -367,6 +367,17 @@ const TONG_CAU = 25; // 12 + 2 + 8 + 3
      rõ trong file gốc nên đã điền theo kiến thức chuyên môn — giáo viên
      kiểm tra lại trước khi cho học sinh làm.
    ===================================================================== */
+/* =====================================================================
+   NGÂN HÀNG CÂU HỎI — ÔN TẬP GIỮA KỲ I, SINH HỌC 10 (ma trận 26-27)
+   - Câu có nguon "ngan-hang": trích NGUYÊN VĂN từ file NHCH_KTGKI_SH10_25-26.docx
+     của giáo viên. Bài đã quy đổi sang ma trận 26-27:
+     NH Bài 3 → MT Bài 3; NH Bài 4 → MT Bài 4; NH Bài 5 → MT Bài 4; NH Bài 6 → MT Bài 5.
+   - Câu có nguon "bo-sung": trợ lý soạn thêm cho đủ ma trận (Bài 1, Bài 2,
+     Bài 6, trả lời ngắn, tự luận).
+   - LƯU Ý QUAN TRỌNG: đáp án các câu TN của NH Bài 3/5/6 KHÔNG được in đậm
+     rõ trong file gốc nên đã điền theo kiến thức chuyên môn — giáo viên
+     kiểm tra lại trước khi cho học sinh làm.
+   ===================================================================== */
 const NGAN_HANG_SINH10 = [
 
 // ================= BÀI 1 (ma trận): GIỚI THIỆU KHÁI QUÁT MÔN SINH HỌC (tự soạn) =================
@@ -787,6 +798,90 @@ const NGAN_HANG_SINH10 = [
   noiDung:"Một người muốn giảm cân nên quyết định loại bỏ hoàn toàn chất béo (lipid) khỏi khẩu phần ăn hằng ngày. Vận dụng kiến thức về các phân tử sinh học, em hãy cho biết quyết định này có hợp lí không? Vì sao?",
   huongDanCham:"ý 1 (0.25đ): Không hợp lí (không nên loại bỏ hoàn toàn lipid khỏi khẩu phần ăn).\ný 2 (0.25đ): Lipid là nguồn dự trữ và cung cấp năng lượng quan trọng cho tế bào và cơ thể.\ný 3 (0.25đ): Lipid tham gia cấu tạo màng tế bào; là dung môi hòa tan các vitamin A, D, E, K; một số hormone được cấu tạo từ lipid (steroid).\ný 4 (0.25đ): Thiếu lipid gây rối loạn chuyển hóa, thiếu vitamin tan trong dầu, ảnh hưởng xấu đến sức khỏe — nên ăn uống hợp lí, hạn chế chứ không loại bỏ hoàn toàn.",
   giaiThich:"Loại bỏ hoàn toàn lipid là không hợp lí vì lipid vừa cung cấp, dự trữ năng lượng, vừa cấu tạo màng tế bào, hòa tan vitamin A, D, E, K và tạo một số hormone." },
+
+// ================= BỔ SUNG BÀI 1 & BÀI 2 (theo SGK Kết nối tri thức, 09/10/2026) =================
+{ id:"SH10-TN046", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"Mục tiêu của sinh học là gì?",
+  luaChon:["Tìm hiểu cấu trúc và sự vận hành của các quá trình sống ở các cấp độ tổ chức của sự sống, qua đó điều khiển, tối ưu hóa nguồn tài nguyên phục vụ phát triển bền vững",
+           "Chế tạo ra các loài sinh vật mới theo ý muốn của con người",
+           "Thay thế hoàn toàn các ngành khoa học tự nhiên khác",
+           "Chỉ nghiên cứu cơ thể người để chữa bệnh"],
+  dapAn:0,
+  giaiThich:"Mục tiêu của sinh học là tìm hiểu cấu trúc và sự vận hành của các quá trình sống ở các cấp độ tổ chức của sự sống, qua đó con người có thể điều khiển, tối ưu hóa được nguồn tài nguyên sinh học cũng như phi sinh học, phục vụ cho sự phát triển bền vững của xã hội loài người." },
+{ id:"SH10-TN047", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"Lĩnh vực nghiên cứu cơ bản trong sinh học tập trung vào nội dung nào sau đây?",
+  luaChon:["Đưa các phát kiến sinh học vào ứng dụng trong thực tiễn đời sống",
+           "Tìm hiểu cấu trúc của các cấp độ tổ chức sống, phân loại, cách thức vận hành và tiến hóa của thế giới sống",
+           "Sản xuất thuốc chữa bệnh và vaccine",
+           "Lai tạo giống cây trồng, vật nuôi có năng suất cao"],
+  dapAn:1,
+  giaiThich:"Nghiên cứu cơ bản tập trung tìm hiểu cấu trúc các cấp độ tổ chức sống, phân loại, cách thức vận hành và tiến hóa của thế giới sống; còn nghiên cứu ứng dụng mới hướng tới đưa các phát kiến vào thực tiễn đời sống." },
+{ id:"SH10-TN048", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"Những hiểu biết về sinh học, đặc biệt về thế giới vi sinh vật, đã giúp con người",
+  luaChon:["giảm tỉ lệ bệnh tật và gia tăng đáng kể tuổi thọ nhờ cải thiện điều kiện vệ sinh, chăm sóc sức khỏe và điều trị bệnh tật",
+           "ngừng hoàn toàn việc sử dụng thuốc kháng sinh",
+           "loại bỏ mọi bệnh truyền nhiễm trên Trái Đất",
+           "tồn tại được mà không cần ăn uống"],
+  dapAn:0,
+  giaiThich:"Hiểu biết về sinh học, đặc biệt về thế giới vi sinh vật, đã giúp giảm tỉ lệ bệnh tật, gia tăng đáng kể tuổi thọ của con người qua việc cải thiện điều kiện vệ sinh, chăm sóc sức khỏe và điều trị bệnh tật." },
+{ id:"SH10-TN049", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"\"Dấu vân tay DNA\" được ứng dụng trong ngành nào sau đây?",
+  luaChon:["Công nghệ chế biến thực phẩm",
+           "Pháp y: xác định nhân thân nạn nhân, quan hệ huyết thống và truy tìm tội phạm",
+           "Xây dựng cầu đường",
+           "Khai thác khoáng sản"],
+  dapAn:1,
+  giaiThich:"Trình tự nucleotide đặc trưng của mỗi người được gọi là \"dấu vân tay DNA\", giúp xác định nhân thân nạn nhân trong các vụ tai nạn, xác định quan hệ huyết thống và truy tìm tội phạm từ dấu vết tại hiện trường." },
+{ id:"SH10-TN050", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"Kính hiển vi điện tử khác kính hiển vi quang học ở điểm nào sau đây?",
+  luaChon:["Sử dụng chùm electron làm nguồn sáng thay cho ánh sáng thường",
+           "Chỉ quan sát được vật thể có kích thước lớn",
+           "Không cần mẫu vật khi quan sát",
+           "Độ phóng đại tối đa chỉ bằng một nửa kính hiển vi quang học"],
+  dapAn:0,
+  giaiThich:"Kính hiển vi quang học dùng ánh sáng (điện hoặc mặt trời) chiếu lên mẫu vật; kính hiển vi điện tử dùng chùm electron chiếu qua hoặc lên bề mặt mẫu vật nên có độ phân giải cao hơn nhiều." },
+{ id:"SH10-TN051", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
+  noiDung:"Máy li tâm được sử dụng trong kĩ thuật nào sau đây?",
+  luaChon:["Kĩ thuật phân đoạn tế bào: tách các bào quan dựa trên khối lượng của chúng",
+           "Kĩ thuật gây đột biến nhân tạo",
+           "Kĩ thuật nuôi cấy mô tế bào",
+           "Kĩ thuật giải trình tự gene"],
+  dapAn:0,
+  giaiThich:"Máy li tâm được dùng trong kĩ thuật phân đoạn tế bào: phá vỡ tế bào rồi li tâm ở các tốc độ vòng quay khác nhau để tách riêng các bào quan có khối lượng khác nhau." },
+{ id:"SH10-TN052", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"H", loai:"TN", nguon:"bo-sung",
+  noiDung:"Vì sao kính hiển vi điện tử quan sát được cấu trúc siêu hiển vi của tế bào mà kính hiển vi quang học không làm được?",
+  luaChon:["Vì kính hiển vi điện tử có kích thước lớn hơn",
+           "Vì kính hiển vi điện tử có độ phân giải cao hơn nhiều (nhỏ hơn 1 Å, trong khi kính hiển vi quang học chỉ khoảng 200 nm)",
+           "Vì kính hiển vi quang học không cần nguồn sáng",
+           "Vì mẫu vật quan sát bằng kính hiển vi điện tử không cần xử lí"],
+  dapAn:1,
+  giaiThich:"Độ phân giải của kính hiển vi quang học chỉ khoảng 200 nm nên không thấy được cấu trúc siêu hiển vi; kính hiển vi điện tử có độ phân giải nhỏ hơn 1 Å nhờ dùng chùm electron." },
+{ id:"SH10-TN053", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"H", loai:"TN", nguon:"bo-sung",
+  noiDung:"Trong một thí nghiệm kiểm chứng, nhóm đối chứng và nhóm thực nghiệm khác nhau ở điểm nào?",
+  luaChon:["Mọi yếu tố đều giống nhau ngoại trừ yếu tố cần nghiên cứu",
+           "Nhóm đối chứng không cần tuân thủ điều kiện thí nghiệm",
+           "Hai nhóm sử dụng hai đối tượng nghiên cứu hoàn toàn khác nhau",
+           "Nhóm thực nghiệm không cần ghi chép số liệu"],
+  dapAn:0,
+  giaiThich:"Thí nghiệm kiểm chứng gồm lô đối chứng và lô thí nghiệm: đối tượng và mọi yếu tố môi trường ở hai lô đều giống nhau, ngoại trừ yếu tố cần nghiên cứu; so sánh sự khác biệt giữa hai lô sẽ thấy được ảnh hưởng của yếu tố đó." },
+{ id:"SH10-DS05", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"bo-sung",
+  noiDung:"Về làm việc an toàn trong phòng thí nghiệm, mỗi nhận định sau đây là Đúng hay Sai?",
+  cacY:[
+    { kyHieu:"a", noiDung:"Kính hiển vi quang học sử dụng ánh sáng (điện hoặc mặt trời) chiếu lên mẫu vật.", mucDo:"B", dapAn:true },
+    { kyHieu:"b", noiDung:"Máy li tâm tách các bào quan dựa trên khối lượng khác nhau của chúng.", mucDo:"H", dapAn:true },
+    { kyHieu:"c", noiDung:"Có thể ăn uống nhẹ trong phòng thí nghiệm nếu cẩn thận không làm đổ vào mẫu vật.", mucDo:"VD", dapAn:false },
+    { kyHieu:"d", noiDung:"Trước khi sử dụng thiết bị, người nghiên cứu cần nắm quy tắc vận hành và ghi nhật kí làm việc.", mucDo:"VD", dapAn:true }
+  ],
+  giaiThich:"Ý c Sai vì nội quy phòng thí nghiệm cấm ăn uống, đùa nghịch trong phòng thí nghiệm; không nếm hoặc ngửi hóa chất." },
+{ id:"SH10-DS06", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"bo-sung",
+  noiDung:"Về tiến trình nghiên cứu khoa học, mỗi nhận định sau đây là Đúng hay Sai?",
+  cacY:[
+    { kyHieu:"a", noiDung:"Mọi nghiên cứu sinh học đều bắt đầu từ quan sát để thu thập dữ liệu.", mucDo:"B", dapAn:true },
+    { kyHieu:"b", noiDung:"Giả thuyết khoa học là cách giải thích có thể kiểm chứng được bằng thực nghiệm.", mucDo:"H", dapAn:true },
+    { kyHieu:"c", noiDung:"Nếu kết quả thí nghiệm không ủng hộ giả thuyết, nhà khoa học nên sửa số liệu cho khớp với giả thuyết.", mucDo:"VD", dapAn:false },
+    { kyHieu:"d", noiDung:"Giả thuyết được nhiều nhà khoa học kiểm chứng trên nhiều đối tượng và được thừa nhận sẽ trở thành học thuyết khoa học.", mucDo:"VD", dapAn:true }
+  ],
+  giaiThich:"Ý c Sai vì số liệu phải khách quan, trung thực; khi kết quả không ủng hộ giả thuyết thì giả thuyết bị bác bỏ và cần hình thành giả thuyết mới." },
 
 ];
 
