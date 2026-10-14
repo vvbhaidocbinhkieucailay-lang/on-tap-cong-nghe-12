@@ -891,6 +891,15 @@ document.addEventListener('DOMContentLoaded',()=>{
       document.querySelectorAll('#chon-ma-de .made-btn').forEach(function(x){x.classList.remove('chon');});
       b.classList.add('chon');
       veCauTrucDe();
+  try{
+    var madeURL=new URLSearchParams(location.search).get('made');
+    if(['102','103','104'].indexOf(madeURL)>=0){
+      document.querySelectorAll('#chon-ma-de .made-btn').forEach(function(x){
+        x.classList.toggle('chon', x.getAttribute('data-made')===madeURL);
+      });
+      veCauTrucDe();
+    }
+  }catch(e){}
     });
   });
   veCauTrucDe();
