@@ -148,6 +148,9 @@ HƯỚNG DẪN NHANH CHO GIÁO VIÊN
   .send-status.ok{background:var(--dung-nen);color:var(--xanh-rung-dam)}
   .send-status.loi{background:var(--sai-nen);color:var(--sai)}
   .app-footer{text-align:center;font-size:.8rem;color:var(--chu-phu);padding:14px;font-weight:600}
+.made-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.made-btn{padding:12px 4px;border:2px solid #E0E0E0;border-radius:12px;background:#fff;font-size:1rem;font-weight:700;color:#333;cursor:pointer;min-height:56px}
+.made-btn.chon{border-color:#2E7D32;background:#E8F5E9;color:#2E7D32}
 </style>
 </head>
 <body>
@@ -162,7 +165,7 @@ HƯỚNG DẪN NHANH CHO GIÁO VIÊN
         </svg>
         <div class="hero-sub">Sinh học 10 · Giữa kỳ I</div>
         <h1>Ôn tập kiểm tra<br>giữa kỳ I</h1>
-        <p>Đề bám sát ma trận của trường — mỗi lượt làm là một đề khác nhau.</p>
+        <p>Đề bám sát ma trận của trường — có đề ngẫu nhiên và 3 mã đề cố định 102, 103, 104 để cả lớp cùng luyện.</p>
       </div>
 
       <div class="exam-grid">
@@ -204,15 +207,19 @@ HƯỚNG DẪN NHANH CHO GIÁO VIÊN
       </div>
 
       <div class="card">
+        <h2 class="section-title">Chọn mã đề</h2>
+        <div class="made-grid" id="chon-ma-de">
+          <button class="made-btn chon" data-made="">Ngẫu nhiên</button>
+          <button class="made-btn" data-made="102">Đề 102</button>
+          <button class="made-btn" data-made="103">Đề 103</button>
+          <button class="made-btn" data-made="104">Đề 104</button>
+        </div>
+        <p class="muted" id="mo-ta-ma-de" style="margin-top:10px"></p>
+      </div>
+
+      <div class="card">
         <h2 class="section-title">Cấu trúc đề thi</h2>
-        <div class="info-row"><span>Phần I — Trắc nghiệm nhiều lựa chọn</span><b>12 câu × 0,25đ</b></div>
-        <div class="info-row"><span>Phần I — Trắc nghiệm đúng/sai</span><b>2 câu × 4 ý × 0,25đ</b></div>
-        <div class="info-row"><span>Phần I — Trả lời ngắn</span><b>8 câu × 0,25đ</b></div>
-        <div class="info-row"><span>Phần II — Tự luận (cô/chú chấm)</span><b>3 câu × 1,0đ</b></div>
-        <div class="info-row"><span>Phạm vi</span><b>Bài 1 → Bài 6</b></div>
-        <div class="info-row"><span>Thời gian làm bài</span><b>45 phút</b></div>
-        <div class="info-row"><span>Tổng điểm</span><b>10 điểm</b></div>
-        <p class="muted" style="margin-top:10px">Mỗi lượt làm, máy bốc ngẫu nhiên câu hỏi theo đúng ma trận nên đề của mỗi bạn khác nhau. Cố gắng làm hết sức mình nhé!</p>
+        <div id="cau-truc-de"></div>
       </div>
 
       <button class="cta-big" id="nut-vao-lam-bai">
@@ -308,7 +315,10 @@ HƯỚNG DẪN NHANH CHO GIÁO VIÊN
 
   <footer class="app-footer">Ôn tập giữa kỳ I · Sinh học 10 · Chúc em làm bài tốt!</footer>
 </div>
+<script src="bank-a.js"></script>
+<script src="bank-b.js"></script>
 <script>
+const NGAN_HANG_SINH10 = NGAN_HANG_SINH10_A.concat(NGAN_HANG_SINH10_B);
 /* =====================================================================
    PHẦN 1: CẤU HÌNH — cô/chú dán URL Apps Script vào APPS_SCRIPT_URL
    sau khi triển khai (xem HUONG_DAN_CAI_DAT.md).
@@ -353,538 +363,34 @@ const MA_TRAN = {
     { bai: 5, mucDo: "VD", soCau: 1 },
   ]
 };
+/* Ma trận cho 3 mã đề cố định 102/103/104: 24 TN (6đ) + 2 ĐS (2đ) + 8 TLN (2đ) = 10đ, không tự luận.
+   TN gấp đôi ma trận GK1 theo đúng tỉ lệ Biết/Hiểu/Vận dụng từng bài. */
+const MA_TRAN_24 = {
+  tracnghiem: [
+    { bai: 1, mucDo: "B",  soCau: 4 },
+    { bai: 2, mucDo: "B",  soCau: 2 },
+    { bai: 2, mucDo: "H",  soCau: 2 },
+    { bai: 3, mucDo: "B",  soCau: 4 },
+    { bai: 4, mucDo: "B",  soCau: 2 },
+    { bai: 4, mucDo: "H",  soCau: 2 },
+    { bai: 5, mucDo: "B",  soCau: 2 },
+    { bai: 5, mucDo: "H",  soCau: 2 },
+    { bai: 6, mucDo: "VD", soCau: 4 },
+  ],
+  dungsai: [
+    { bai: 2, soCau: 1 },
+    { bai: 5, soCau: 1 },
+  ],
+  traloiNgan: [
+    { bai: 4, mucDo: "B",  soCau: 2 },
+    { bai: 3, mucDo: "H",  soCau: 2 },
+    { bai: 5, mucDo: "H",  soCau: 2 },
+    { bai: 5, mucDo: "VD", soCau: 2 },
+  ],
+  tuluuan: []
+};
 const DIEM = { TN: 0.25, DS_Y: 0.25, TLN: 0.25, TL: 1.0 };
 const TONG_CAU = 25; // 12 + 2 + 8 + 3
-
-/* =====================================================================
-   NGÂN HÀNG CÂU HỎI — ÔN TẬP GIỮA KỲ I, SINH HỌC 10 (ma trận 26-27)
-   - Câu có nguon "ngan-hang": trích NGUYÊN VĂN từ file NHCH_KTGKI_SH10_25-26.docx
-     của giáo viên. Bài đã quy đổi sang ma trận 26-27:
-     NH Bài 3 → MT Bài 3; NH Bài 4 → MT Bài 4; NH Bài 5 → MT Bài 4; NH Bài 6 → MT Bài 5.
-   - Câu có nguon "bo-sung": trợ lý soạn thêm cho đủ ma trận (Bài 1, Bài 2,
-     Bài 6, trả lời ngắn, tự luận).
-   - LƯU Ý QUAN TRỌNG: đáp án các câu TN của NH Bài 3/5/6 KHÔNG được in đậm
-     rõ trong file gốc nên đã điền theo kiến thức chuyên môn — giáo viên
-     kiểm tra lại trước khi cho học sinh làm.
-   ===================================================================== */
-/* =====================================================================
-   NGÂN HÀNG CÂU HỎI — ÔN TẬP GIỮA KỲ I, SINH HỌC 10 (ma trận 26-27)
-   - Câu có nguon "ngan-hang": trích NGUYÊN VĂN từ file NHCH_KTGKI_SH10_25-26.docx
-     của giáo viên. Bài đã quy đổi sang ma trận 26-27:
-     NH Bài 3 → MT Bài 3; NH Bài 4 → MT Bài 4; NH Bài 5 → MT Bài 4; NH Bài 6 → MT Bài 5.
-   - Câu có nguon "bo-sung": trợ lý soạn thêm cho đủ ma trận (Bài 1, Bài 2,
-     Bài 6, trả lời ngắn, tự luận).
-   - LƯU Ý QUAN TRỌNG: đáp án các câu TN của NH Bài 3/5/6 KHÔNG được in đậm
-     rõ trong file gốc nên đã điền theo kiến thức chuyên môn — giáo viên
-     kiểm tra lại trước khi cho học sinh làm.
-   ===================================================================== */
-const NGAN_HANG_SINH10 = [
-
-// ================= BÀI 1 (ma trận): GIỚI THIỆU KHÁI QUÁT MÔN SINH HỌC (tự soạn) =================
-{ id:"SH10-TN001", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"Đối tượng nghiên cứu của sinh học là gì?",
-  luaChon:["Thế giới vô sinh và các hiện tượng vật lí",
-           "Sinh vật, các cấp độ tổ chức sống và mối quan hệ của sinh vật với môi trường",
-           "Các phản ứng hóa học trong công nghiệp",
-           "Cấu tạo bên trong của Trái Đất"],
-  dapAn:1,
-  giaiThich:"Sinh học là khoa học nghiên cứu về sự sống: các sinh vật, các cấp độ tổ chức của thế giới sống và mối quan hệ giữa sinh vật với môi trường." },
-{ id:"SH10-TN002", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"Ngành nghề nào sau đây có liên quan trực tiếp đến sinh học?",
-  luaChon:["Kĩ sư xây dựng","Bác sĩ y khoa","Kế toán","Kiến trúc sư"],
-  dapAn:1,
-  giaiThich:"Bác sĩ y khoa nghiên cứu cơ thể người, bệnh tật và thuốc chữa bệnh — gắn trực tiếp với kiến thức sinh học." },
-{ id:"SH10-TN003", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"Phát biểu nào sau đây đúng về phát triển bền vững?",
-  luaChon:["Khai thác tối đa tài nguyên để phát triển kinh tế trước mắt",
-           "Đáp ứng nhu cầu của hiện tại mà không làm ảnh hưởng đến khả năng đáp ứng nhu cầu của các thế hệ tương lai",
-           "Chỉ tập trung bảo vệ động vật hoang dã",
-           "Ngừng mọi hoạt động sản xuất công nghiệp"],
-  dapAn:1,
-  giaiThich:"Phát triển bền vững là sự phát triển đáp ứng nhu cầu hiện tại mà không làm tổn hại khả năng đáp ứng nhu cầu của các thế hệ tương lai." },
-
-// ================= BÀI 2 (ma trận): PHƯƠNG PHÁP NGHIÊN CỨU VÀ HỌC TẬP MÔN SINH HỌC (tự soạn) =================
-{ id:"SH10-TN004", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"Phương pháp nào sau đây KHÔNG phải là phương pháp nghiên cứu sinh học?",
-  luaChon:["Quan sát","Làm việc trong phòng thí nghiệm","Thực nghiệm khoa học","Phỏng đoán cảm tính, không kiểm chứng"],
-  dapAn:3,
-  giaiThich:"Ba phương pháp nghiên cứu sinh học cơ bản là quan sát, làm việc trong phòng thí nghiệm và thực nghiệm khoa học; phỏng đoán không kiểm chứng không phải phương pháp khoa học." },
-{ id:"SH10-TN005", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"Tin sinh học (bioinformatics) là",
-  luaChon:["ngành khoa học sử dụng công cụ tin học để lưu trữ, phân tích dữ liệu sinh học",
-           "phần mềm chỉnh sửa hình ảnh",
-           "phương pháp trồng cây trong nhà kính",
-           "kĩ thuật mổ xẻ động vật trong phòng thí nghiệm"],
-  dapAn:0,
-  giaiThich:"Tin sinh học dùng công cụ tin học để lưu trữ, quản lí và phân tích các dữ liệu sinh học (trình tự DNA, protein...), là công cụ quan trọng trong nghiên cứu và học tập sinh học hiện nay." },
-{ id:"SH10-TN006", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"H", loai:"TN", nguon:"bo-sung",
-  noiDung:"Một học sinh muốn tìm hiểu ảnh hưởng của ánh sáng đến sự sinh trưởng của cây đậu: trồng hai chậu cây giống hệt nhau, một chậu để nơi có ánh sáng, một chậu để nơi thiếu sáng rồi so sánh. Đây là phương pháp nào?",
-  luaChon:["Quan sát thuần túy","Thực nghiệm khoa học","Tin sinh học","Điều tra xã hội học"],
-  dapAn:1,
-  giaiThich:"Thực nghiệm khoa học là phương pháp chủ động tác động vào đối tượng, bố trí thí nghiệm đối chứng (chỉ khác nhau một yếu tố) để tìm hiểu mối quan hệ nhân quả." },
-{ id:"SH10-TN007", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"H", loai:"TN", nguon:"bo-sung",
-  noiDung:"Trong tiến trình nghiên cứu khoa học, sau khi quan sát hiện tượng và đặt câu hỏi, bước tiếp theo thường là",
-  luaChon:["viết báo cáo kết quả ngay",
-           "xây dựng giả thuyết và thiết kế thí nghiệm để kiểm chứng",
-           "công bố kết quả trên báo chí",
-           "tiếp tục quan sát mà không cần giả thuyết"],
-  dapAn:1,
-  giaiThich:"Tiến trình nghiên cứu gồm: quan sát → đặt câu hỏi → xây dựng giả thuyết → thiết kế và tiến hành thí nghiệm kiểm chứng → thu thập, xử lí số liệu → báo cáo." },
-
-// ================= BÀI 3 (ma trận): CÁC CẤP ĐỘ TỔ CHỨC CỦA THẾ GIỚI SỐNG (từ ngân hàng) =================
-{ id:"SH10-TN008", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Các cấp độ tổ chức sống thể hiện được các đặc trưng sống cơ bản như:",
-  luaChon:["chuyển hóa vật chất và năng lượng, sinh trưởng và phát triển, sinh sản, cảm ứng,…",
-           "chuyển hóa vật chất, sinh trưởng và phát triển, sinh sản, cảm ứng,…",
-           "chuyển hóa vật chất và năng lượng, phát triển, sinh sản, cảm ứng,…",
-           "chuyển hóa vật chất và năng lượng, sinh trưởng và phát triển, sinh sản,…"],
-  dapAn:0,
-  giaiThich:"Các đặc trưng sống cơ bản gồm: chuyển hóa vật chất và năng lượng, sinh trưởng và phát triển, sinh sản, cảm ứng." },
-{ id:"SH10-TN009", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Cấp độ tổ chức nhỏ nhất trong cấp độ tổ chức sống là gì?",
-  luaChon:["Nguyên tử.","Phân tử.","Tế bào.","Hợp tử."],
-  dapAn:2,
-  giaiThich:"Tế bào là cấp độ tổ chức nhỏ nhất biểu hiện đầy đủ các đặc trưng của sự sống." },
-{ id:"SH10-TN010", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Tổ chức sống nào sau đây là bào quan?",
-  luaChon:["Tim.","Phổi.","Lục lạp.","Não."],
-  dapAn:2,
-  giaiThich:"Lục lạp là bào quan trong tế bào thực vật; tim, phổi, não là các cơ quan." },
-{ id:"SH10-TN011", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Đơn vị tổ chức cơ sở của mọi sinh vật là",
-  luaChon:["các đại phân tử.","tế bào.","mô.","cơ quan."],
-  dapAn:1,
-  giaiThich:"Tế bào là đơn vị tổ chức cơ sở (đơn vị cấu trúc và chức năng) của mọi sinh vật." },
-{ id:"SH10-TN012", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Quần xã sinh vật là",
-  luaChon:["tập hợp nhiều quần thể của các loài khác nhau.",
-           "tập hợp nhiều quần thể cùng loài.",
-           "tập hợp các cá thể cùng loài.",
-           "tập hợp cá thể của hai loài sống ở hai nơi."],
-  dapAn:0,
-  giaiThich:"Quần xã sinh vật gồm nhiều quần thể của các loài khác nhau cùng sống trong một không gian xác định." },
-{ id:"SH10-TN013", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Tập hợp nhiều tế bào cùng loại và cùng thực hiện một chức năng nhất định tạo thành",
-  luaChon:["hệ cơ quan.","mô.","cơ thể.","cơ quan."],
-  dapAn:1,
-  giaiThich:"Mô là tập hợp các tế bào cùng loại, cùng thực hiện một chức năng nhất định." },
-{ id:"SH10-TN014", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Các cấp tổ chức cơ bản theo thứ tự đúng là",
-  luaChon:["tế bào, cơ thể, quần xã, quần thể, hệ sinh thái.",
-           "tế bào, quần thể, cơ thể, quần xã, hệ sinh thái.",
-           "tế bào, cơ thể, quần thể, quần xã, hệ sinh thái.",
-           "cơ thể, quần thể, quần xã, tế bào, hệ sinh thái."],
-  dapAn:2,
-  giaiThich:"Theo nguyên tắc thứ bậc từ thấp đến cao: tế bào → cơ thể → quần thể → quần xã → hệ sinh thái." },
-{ id:"SH10-TN015", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Căn cứ chủ yếu để coi tế bào là đơn vị cơ bản của sự sống là vì chúng",
-  luaChon:["có cấu tạo phức tạp.","có cấu tạo đơn giản.",
-           "được cấu tạo bởi nhiều bào quan.","biểu hiện đầy đủ các đặc tính của sự sống."],
-  dapAn:3,
-  giaiThich:"Tế bào biểu hiện đầy đủ các đặc tính của sự sống (chuyển hóa, sinh trưởng, sinh sản, cảm ứng...) nên được coi là đơn vị cơ bản của sự sống." },
-{ id:"SH10-TN016", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"“Tổ chức sống cấp thấp hơn làm nền tảng để xây dựng nên tổ chức sống cấp cao hơn” giải thích cho nguyên tắc nào của thế giới sống?",
-  luaChon:["Nguyên tắc thứ bậc.","Nguyên tắc mở.","Nguyên tắc tự điều chỉnh.","Nguyên tắc bổ sung"],
-  dapAn:0,
-  giaiThich:"Đây là nội dung của nguyên tắc thứ bậc: cấp tổ chức thấp làm nền tảng xây dựng cấp tổ chức cao hơn." },
-
-// ================= BÀI 4 (ma trận): CÁC NGUYÊN TỐ HÓA HỌC VÀ NƯỚC TRONG TẾ BÀO =================
-// ---- Lấy từ NH Bài 4 "KHÁI QUÁT VỀ TẾ BÀO" ----
-{ id:"SH10-TN017", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Người đã sử dụng kính hiển vi quang học để quan sát các lát mỏng từ vỏ bần của cây sồi là",
-  luaChon:["Robert Hooke","Leeuwenhoek","Theodor Schwann","Matthias Schleiden"],
-  dapAn:0,
-  giaiThich:"Năm 1665, Robert Hooke dùng kính hiển vi quang học quan sát lát mỏng vỏ bần cây sồi, thấy các ô nhỏ và gọi là 'cell' (tế bào)." },
-{ id:"SH10-TN018", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Nhà khoa học nào trong số các nhà khoa học này đã xây dựng học thuyết tế bào?",
-  luaChon:["Schleiden và Schwann.","Rudolf Virchow.","Robert Koch.","Antony van Leeuwenhoek."],
-  dapAn:0,
-  giaiThich:"Schleiden và Schwann là hai nhà khoa học đã xây dựng nên học thuyết tế bào." },
-{ id:"SH10-TN019", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Cho đoạn thông tin sau: Mọi cơ thể sống đều được cấu tạo từ (1) …………. Cơ thể đa bào gồm nhiều tế bào phân hóa thành các (2) ……………., (3) ………… khác nhau cùng phối hợp thực hiện tất cả các hoạt động sống của cơ thể. Điền từ thích hợp vào chỗ trống?",
-  luaChon:["(1) cơ quan; (2) mô; (3) tế bào.",
-           "(1) tế bào; (2) mô; (3) cơ quan.",
-           "(1) mô; (2) cơ quan; (3) tế bào.",
-           "(1) mô; (2) tế bào; (3) cơ quan."],
-  dapAn:1,
-  giaiThich:"Mọi cơ thể sống đều cấu tạo từ tế bào; cơ thể đa bào gồm nhiều tế bào phân hóa thành các mô, cơ quan khác nhau." },
-{ id:"SH10-TN020", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Sinh vật có cơ thể được cấu tạo từ một tế bào gọi là",
-  luaChon:["sinh vật đa bào.","sinh vật đơn bào.","sinh vật kí sinh.","sinh vật ngoại sinh."],
-  dapAn:1,
-  giaiThich:"Sinh vật đơn bào có cơ thể chỉ gồm một tế bào nhưng vẫn thực hiện đầy đủ các hoạt động sống." },
-{ id:"SH10-TN021", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Tại sao nói tế bào là đơn vị cấu trúc và chức năng của cơ thể con người?",
-  luaChon:["Một số cơ quan trong cơ thể người được cấu tạo bởi tế bào.",
-           "Các hoạt động sống của tế bào là cơ sở cho các hoạt động sống của cơ thể.",
-           "Khi toàn bộ các tế bào bị chết thì cơ thể vẫn hoạt động bình thường.",
-           "Cơ thể sống chỉ có một tế bào thực hiện mọi chức năng sống."],
-  dapAn:1,
-  giaiThich:"Mọi hoạt động sống của cơ thể đều dựa trên hoạt động sống của tế bào, nên tế bào vừa là đơn vị cấu trúc vừa là đơn vị chức năng." },
-{ id:"SH10-TN022", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Tế bào là đơn vị cấu trúc của cơ thể vì",
-  luaChon:["tế bào là đơn vị có kích thước nhỏ nhất.",
-           "mọi cơ thể sống đều được cấu tạo từ tế bào.",
-           "mọi hoạt động sống đều được thực hiện nhờ tế bào.",
-           "tế bào có chức năng sinh sản."],
-  dapAn:1,
-  giaiThich:"Mọi cơ thể sống đều được cấu tạo từ tế bào → tế bào là đơn vị cấu trúc của cơ thể." },
-{ id:"SH10-TN023", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Phát biểu nào sau đây là không đúng với nội dung của học thuyết tế bào?",
-  luaChon:["Tế bào là đơn vị cơ sở của sự sống.",
-           "Các tế bào được sinh ra từ các tế bào có trước.",
-           "Tất cả các sinh vật đều được cấu tạo bởi nhiều tế bào.",
-           "Các tế bào đều được cấu tạo từ những thành phần hoá học tương tự như nhau."],
-  dapAn:2,
-  giaiThich:"Có sinh vật đơn bào (chỉ gồm một tế bào) nên phát biểu 'tất cả sinh vật đều cấu tạo bởi nhiều tế bào' là không đúng." },
-{ id:"SH10-TN024", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Cơ thể đơn bào có đặc điểm chỉ gồm …(1)… tế bào nhưng thực hiện được tất cả các hoạt động sống của một cơ thể nhờ sự …(2)… giữa các thành phần cấu trúc của tế bào. Các từ/cụm từ cần điền vào vị trí (1), (2) lần lượt là:",
-  luaChon:["(1) – một; (2) – phối hợp.",
-           "(1) – một; (2) – phát triển.",
-           "(1) – nhiều; (2) – phối hợp.",
-           "(1) – nhiều; (2) – phát triển."],
-  dapAn:0,
-  giaiThich:"Cơ thể đơn bào chỉ gồm một tế bào, thực hiện mọi hoạt động sống nhờ sự phối hợp giữa các thành phần cấu trúc trong tế bào." },
-// ---- Lấy từ NH Bài 5 "CÁC NGUYÊN TỐ HÓA HỌC VÀ NƯỚC" (đáp án gốc không in đậm — điền theo kiến thức, cần kiểm tra lại) ----
-{ id:"SH10-TN025", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Trong các cơ thể sống, thành phần chủ yếu là",
-  luaChon:["chất hữu cơ.","chất vô cơ.","nước.","vitamin."],
-  dapAn:2,
-  giaiThich:"Nước chiếm phần lớn khối lượng cơ thể sống (khoảng 70%), là thành phần chủ yếu." },
-{ id:"SH10-TN026", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Nguyên tố hóa học tạo nên sự đa dạng của các hợp chất hữu cơ là",
-  luaChon:["carbon","oxygen","hydrogen","nitrogen"],
-  dapAn:0,
-  giaiThich:"Carbon có 4 electron ở lớp ngoài cùng, tạo được mạch 'xương sống' đa dạng cho các hợp chất hữu cơ." },
-{ id:"SH10-TN027", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Liên kết hóa học giữa các nguyên tử trong phân tử nước là",
-  luaChon:["liên kết cộng hóa trị.","liên kết hydrogen.","liên kết ion.","liên kết phosphodieste"],
-  dapAn:0,
-  giaiThich:"Trong phân tử nước, H và O liên kết với nhau bằng liên kết cộng hóa trị phân cực; liên kết hydrogen chỉ hình thành GIỮA các phân tử nước với nhau." },
-{ id:"SH10-TN028", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Trong cơ thể sinh vật, nguyên tố chiếm tỉ lệ cao nhất là",
-  luaChon:["carbon","Hydrogen","oxygen","nitrogen"],
-  dapAn:2,
-  giaiThich:"Oxygen chiếm tỉ lệ cao nhất trong cơ thể sinh vật (có trong nước và các hợp chất hữu cơ)." },
-{ id:"SH10-TN029", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Khi nói về các nguyên tố hóa học trong tế bào sống. Nhận định nào sau đây là Sai?",
-  luaChon:["Nhóm nguyên tố chiếm số lượng chất khô nhiều nhất là C,H,O,N.",
-           "Nguyên tố vi lượng là nguyên tố có tỉ lệ lớn hơn 0,01%.",
-           "Nguyên tố đa lượng tham gia cấu tạo nên các đại phân tử hữu cơ.",
-           "Có khoảng 25 nguyên tố có vai trò quan trọng đối với sự sống."],
-  dapAn:1,
-  giaiThich:"Nguyên tố vi lượng chiếm tỉ lệ NHỎ hơn 0,01% khối lượng cơ thể, nên nhận định B là sai." },
-{ id:"SH10-TN030", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Nước là dung môi hoà tan nhiều chất trong cơ thể sống vì chúng có",
-  luaChon:["nhiệt dung riêng cao.","lực gắn kết.","nhiệt bay hơi cao.","tính phân cực."],
-  dapAn:3,
-  giaiThich:"Nhờ tính phân cực, phân tử nước hòa tan được nhiều chất phân cực và các chất ion." },
-{ id:"SH10-TN031", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Vì sao các nguyên tố vi lượng có vai trò quan trọng đối với cơ thể?",
-  luaChon:["Chiếm khối lượng nhỏ.","Giúp tăng cường hệ miễn dịch cho cơ thể.",
-           "Cơ thể sinh vật không thể tự tổng hợp các chất ấy.","Là thành phần cấu trúc bắt buộc của nhiều hệ enzyme."],
-  dapAn:3,
-  giaiThich:"Dù chỉ cần lượng rất nhỏ, nguyên tố vi lượng là thành phần bắt buộc của nhiều hệ enzyme nên rất quan trọng." },
-{ id:"SH10-TN032", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Vì sao nguyên tử carbon có thể tạo nên mạch “xương sống” của các hợp chất hữu cơ chính có trong tế bào như protein, nucleic acid, carbohydrate, lipid?",
-  luaChon:["Vì nguyên tử carbon có 3 electron tự do tham gia liên kết cộng hóa trị với các nguyên tử carbon khác và các nguyên tử khác như O, N, P….",
-           "Vì nguyên tử carbon có 4 electron tự do tham gia liên kết cộng hóa trị với các nguyên tử carbon khác và các nguyên tử khác như O, N, P….",
-           "Vì nguyên tử carbon có 5 electron tự do tham gia liên kết cộng hóa trị với các nguyên tử carbon khác và các nguyên tử khác như O, N, P….",
-           "Vì nguyên tử carbon có 6 electron tự do tham gia liên kết cộng hóa trị với các nguyên tử carbon khác và các nguyên tử khác như O, N, P…."],
-  dapAn:1,
-  giaiThich:"Carbon có 4 electron ở lớp ngoài cùng nên tạo được 4 liên kết cộng hóa trị, hình thành mạch carbon đa dạng làm 'xương sống' cho các hợp chất hữu cơ." },
-{ id:"SH10-TN033", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"Có khoảng bao nhiêu nguyên tố hóa học tham gia cấu thành các cơ thể sống?",
-  luaChon:["Khoảng 25 nguyên tố","Khoảng 60 nguyên tố","Khoảng 90 nguyên tố","Tất cả 118 nguyên tố đã biết"],
-  dapAn:0,
-  giaiThich:"Trong hơn 100 nguyên tố đã biết, chỉ có khoảng 25 nguyên tố tham gia cấu thành cơ thể sống; riêng C, H, O, N đã chiếm khoảng 96% khối lượng cơ thể. (Câu gốc trong ngân hàng ghi phương án theo % khó hiểu nên đã viết lại cho rõ ràng.)" },
-
-// ================= BÀI 5 (ma trận): CÁC PHÂN TỬ SINH HỌC (từ NH Bài 6; đáp án gốc không in đậm — điền theo kiến thức, cần kiểm tra lại) =================
-{ id:"SH10-TN034", bai:5, chuDe:"Các phân tử sinh học", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Các nguyên tố hoá học cấu tạo của Cacbohidrate là",
-  luaChon:["carbon và hydrogen.","hydrogen và oxygen.","oxygen và carbon.","carbon, hydrogen và oxygen."],
-  dapAn:3,
-  giaiThich:"Carbohydrate được cấu tạo từ ba nguyên tố C, H, O." },
-{ id:"SH10-TN035", bai:5, chuDe:"Các phân tử sinh học", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Chức năng chủ yếu của đường glucose là",
-  luaChon:["tham gia cấu tạo thành tế bào.",
-           "cung cấp năng lượng cho hoạt động tế bào.",
-           "tham gia cấu tạo nhiễm sắc thể.",
-           "là thành phần của phân tử DNA."],
-  dapAn:1,
-  giaiThich:"Glucose là nguồn cung cấp năng lượng chủ yếu cho hoạt động của tế bào." },
-{ id:"SH10-TN036", bai:5, chuDe:"Các phân tử sinh học", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Đơn phân của protein là",
-  luaChon:["nucleosome","acid amin.","nucleotid.","acid béo."],
-  dapAn:1,
-  giaiThich:"Protein được cấu tạo theo nguyên tắc đa phân, đơn phân là acid amin." },
-{ id:"SH10-TN037", bai:5, chuDe:"Các phân tử sinh học", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Liên kết hóa học chủ yếu giữa các acid amin trong phân tử protein là",
-  luaChon:["liên kết hóa trị.","liên kết hidro.","liên kết đisunfua.","liên kết peptid."],
-  dapAn:3,
-  giaiThich:"Các acid amin liên kết với nhau bằng liên kết peptit tạo thành chuỗi polipeptit." },
-{ id:"SH10-TN038", bai:5, chuDe:"Các phân tử sinh học", mucDo:"B", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Đơn phân cấu tạo của DNA là?",
-  luaChon:["Amino acid.","Acid deoxyribonucleic.","Acid ribonucleic.","Nucleotide."],
-  dapAn:3,
-  giaiThich:"DNA được cấu tạo theo nguyên tắc đa phân, đơn phân là nucleotide." },
-{ id:"SH10-TN039", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Một phân tử mỡ bao gồm:",
-  luaChon:["1 phân tử glycerol với 1 acid béo.",
-           "1 phân tử glycerol với 2 acid béo.",
-           "1 phân tử glycerol với 3 acid béo.",
-           "3 phân tử glycerol với 3 acid béo."],
-  dapAn:2,
-  giaiThich:"Một phân tử mỡ (triglyceride) gồm 1 phân tử glycerol liên kết với 3 phân tử acid béo." },
-{ id:"SH10-TN040", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Phospholipid có chức năng chủ yếu là",
-  luaChon:["tham gia cấu tạo nhân của tế bào.",
-           "là thành phần cấu tạo của màng tế bào.",
-           "là thành phần của máu ở động vật.",
-           "cấu tạo nên chất diệp lục ở lá cây."],
-  dapAn:1,
-  giaiThich:"Phospholipid là thành phần chính cấu tạo nên màng tế bào (lớp kép phospholipid)." },
-{ id:"SH10-TN041", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Protein có tính đa dạng và đặc thù thể hiện chủ yếu ở",
-  luaChon:["nhóm amin và nhóm cacboxyl của các acid amin.",
-           "nhóm R của các acid amin.",
-           "liên kết peptid, liên kết hidro và các liên kết khác.",
-           "số lượng, thành phần và trật tự sắp xếp các acid amin."],
-  dapAn:3,
-  giaiThich:"Tính đa dạng, đặc thù của protein do số lượng, thành phần và trật tự sắp xếp các acid amin quy định." },
-{ id:"SH10-TN042", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TN", nguon:"ngan-hang",
-  noiDung:"Điều nào sau đây đúng khi nói về liên kết bổ sung giữa các nucleotide trong phân tử DNA?",
-  luaChon:["A liên kết T bằng 2 liên kết hydrogen.",
-           "T liên kết C bằng 2 liên kết hydrogen.",
-           "C liên kết G bằng 2 liên kết hydrogen.",
-           "G liên kết A bằng 3 liên kết hydrogen."],
-  dapAn:0,
-  giaiThich:"Theo nguyên tắc bổ sung: A liên kết với T bằng 2 liên kết hydrogen; G liên kết với C bằng 3 liên kết hydrogen." },
-
-// ================= BÀI 6 (ma trận): THỰC HÀNH NHẬN BIẾT MỘT SỐ PHÂN TỬ SINH HỌC (tự soạn) =================
-{ id:"SH10-TN043", bai:6, chuDe:"Thực hành: Nhận biết một số phân tử sinh học", mucDo:"VD", loai:"TN", nguon:"bo-sung",
-  noiDung:"Để nhận biết sự có mặt của protein trong một mẫu dịch lỏng, ta có thể dùng thuốc thử nào sau đây?",
-  luaChon:["Thuốc thử Biuret (xuất hiện màu tím)",
-           "Dung dịch iot (xuất hiện màu xanh tím)",
-           "Giấy trắng (xuất hiện vết mờ trong suốt)",
-           "Nước vôi trong (xuất hiện vẩn đục)"],
-  dapAn:0,
-  giaiThich:"Thuốc thử Biuret phản ứng với liên kết peptit trong protein tạo màu tím đặc trưng." },
-{ id:"SH10-TN044", bai:6, chuDe:"Thực hành: Nhận biết một số phân tử sinh học", mucDo:"VD", loai:"TN", nguon:"bo-sung",
-  noiDung:"Nhỏ vài giọt dầu ăn lên tờ giấy trắng, để khô thấy còn lại vết mờ trong suốt. Kết luận nào sau đây đúng?",
-  luaChon:["Dầu ăn chứa tinh bột","Dầu ăn chứa lipid","Dầu ăn chứa protein","Dầu ăn chứa đường đơn"],
-  dapAn:1,
-  giaiThich:"Lipid để lại vết mờ trong suốt trên giấy — đây là cách nhận biết lipid đơn giản." },
-{ id:"SH10-TN045", bai:6, chuDe:"Thực hành: Nhận biết một số phân tử sinh học", mucDo:"VD", loai:"TN", nguon:"bo-sung",
-  noiDung:"Nhỏ dung dịch iot vào lát cắt củ khoai tây thấy xuất hiện màu xanh tím. Kết luận nào sau đây đúng?",
-  luaChon:["Khoai tây chứa nhiều protein",
-           "Khoai tây chứa nhiều tinh bột",
-           "Khoai tây chứa nhiều lipid",
-           "Khoai tây chứa nhiều vitamin C"],
-  dapAn:1,
-  giaiThich:"Dung dịch iot gặp tinh bột cho màu xanh tím đặc trưng → khoai tây chứa nhiều tinh bột." },
-
-// ================= CÂU HỎI ĐÚNG/SAI =================
-// ---- Bài 5 (ma trận): từ ngân hàng (phần Nucleic acid, có đáp án trong file) ----
-{ id:"SH10-DS01", bai:5, chuDe:"Các phân tử sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"ngan-hang",
-  noiDung:"Cho các phát biểu về DNA. Mỗi nhận định sau đây là Đúng hay Sai?",
-  cacY:[
-    { kyHieu:"a", noiDung:"Được cấu tạo từ 2 mạch đơn liên kết bổ sung với nhau bằng các liên kết hydrogen nên phân tử DNA có cấu trúc khá bền vững.", mucDo:"B", dapAn:true },
-    { kyHieu:"b", noiDung:"Ở sinh vật nhân sơ, các phân tử DNA mạch kép có cấu trúc mạch vòng và hệ gene của mỗi tế bào chỉ gồm một phân tử lớn với một số phân tử DNA mạch vòng nhỏ được gọi là các plasmid.", mucDo:"H", dapAn:true },
-    { kyHieu:"c", noiDung:"Các phân tử DNA mạch kép ở sinh vật nhân thực hầu hết có cấu trúc dạng không vòng, một số ít có cấu trúc dạng mạch vòng nhỏ.", mucDo:"H", dapAn:true },
-    { kyHieu:"d", noiDung:"Số lượng các phân tử DNA trong tế bào cũng như trình tự sắp xếp các nucleotide trong mỗi phân tử DNA là không đặc trưng cho từng loài.", mucDo:"H", dapAn:false }
-  ],
-  giaiThich:"Ý d Sai vì số lượng phân tử DNA và trình tự sắp xếp các nucleotide là đặc trưng cho từng loài." },
-{ id:"SH10-DS02", bai:5, chuDe:"Các phân tử sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"ngan-hang",
-  noiDung:"Mỗi nhận định sau về vị trí của nucleic acid là Đúng hay Sai?",
-  cacY:[
-    { kyHieu:"a", noiDung:"DNA chủ yếu ở trong nhân tế bào.", mucDo:"B", dapAn:true },
-    { kyHieu:"b", noiDung:"DNA – Plasmid có ở tế bào chất.", mucDo:"B", dapAn:true },
-    { kyHieu:"c", noiDung:"RNA chủ yếu ở trong nhân tế bào.", mucDo:"H", dapAn:false },
-    { kyHieu:"d", noiDung:"DNA dạng mạch vòng có ở tế bào chất.", mucDo:"H", dapAn:true }
-  ],
-  giaiThich:"Ý c Sai vì RNA chủ yếu nằm ở tế bào chất (tham gia tổng hợp protein ở ribosome), không phải ở nhân." },
-// ---- Bài 2 (ma trận): tự soạn ----
-{ id:"SH10-DS03", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"bo-sung",
-  noiDung:"Một nhóm học sinh tìm hiểu ảnh hưởng của phân bón đến sự sinh trưởng của cây lúa. Mỗi nhận định sau đây là Đúng hay Sai?",
-  cacY:[
-    { kyHieu:"a", noiDung:"Quan sát sự sinh trưởng của cây lúa là một phương pháp nghiên cứu sinh học.", mucDo:"B", dapAn:true },
-    { kyHieu:"b", noiDung:"Nhóm cần trồng các chậu lúa trong điều kiện giống nhau, chỉ khác nhau về lượng phân bón để so sánh.", mucDo:"H", dapAn:true },
-    { kyHieu:"c", noiDung:"Nếu chậu bón nhiều phân nhất sinh trưởng tốt nhất thì kết luận 'bón càng nhiều phân càng tốt' là hợp lí.", mucDo:"VD", dapAn:false },
-    { kyHieu:"d", noiDung:"Kết quả nghiên cứu cần được ghi chép, xử lí và báo cáo một cách trung thực.", mucDo:"VD", dapAn:true }
-  ],
-  giaiThich:"Ý c Sai vì một lần quan sát chưa đủ để kết luận (cần lặp lại thí nghiệm), hơn nữa bón quá nhiều phân có thể gây hại cho cây." },
-{ id:"SH10-DS04", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"bo-sung",
-  noiDung:"Về phương pháp tin sinh học (bioinformatics), mỗi nhận định sau đây là Đúng hay Sai?",
-  cacY:[
-    { kyHieu:"a", noiDung:"Tin sinh học là công cụ hỗ trợ nghiên cứu và học tập môn Sinh học.", mucDo:"B", dapAn:true },
-    { kyHieu:"b", noiDung:"Tin sinh học giúp lưu trữ, so sánh và phân tích các trình tự DNA, protein trên máy tính.", mucDo:"H", dapAn:true },
-    { kyHieu:"c", noiDung:"Nhờ tin sinh học, nhà khoa học có thể dự đoán chức năng của một gene mà không cần làm thêm bất kì thí nghiệm kiểm chứng nào.", mucDo:"VD", dapAn:false },
-    { kyHieu:"d", noiDung:"Học sinh có thể dùng các cơ sở dữ liệu sinh học trực tuyến để tra cứu thông tin về gene, protein phục vụ học tập.", mucDo:"VD", dapAn:true }
-  ],
-  giaiThich:"Ý c Sai vì kết quả phân tích tin sinh học chỉ là dự đoán, vẫn cần thí nghiệm thực tế để kiểm chứng." },
-
-// ================= CÂU HỎI TRẢ LỜI NGẮN =================
-// ---- Bài 4 (ma trận): từ ngân hàng (mục CÂU HỎI TRẢ LỜI NGẮN, có đáp án trong file) ----
-{ id:"SH10-TLN01", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TLN", nguon:"ngan-hang",
-  noiDung:"Cho các phân tử sau đây: lipid, protein, vitamin, glucose, tinh bột. Có bao nhiêu phân tử được cấu tạo nên từ nguyên tố đa lượng?",
-  dapAn:["5","5 phân tử","năm","năm phân tử"],
-  giaiThich:"Cả 5 phân tử đều được cấu tạo từ các nguyên tố đa lượng (C, H, O...)." },
-{ id:"SH10-TLN02", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TLN", nguon:"ngan-hang",
-  noiDung:"Trong tế bào có thể có mặt hầu hết các nguyên tố trong tự nhiên (92 nguyên tố), khoảng 25 nguyên tố quan trọng với sự sống. Trong đó có bao nhiêu nguyên tố chiếm phần lớn trong cơ thể sống (khoảng 96%)?",
-  dapAn:["4","4 nguyên tố","bốn","bốn nguyên tố"],
-  giaiThich:"4 nguyên tố C, H, O, N chiếm khoảng 96% khối lượng cơ thể sống." },
-{ id:"SH10-TLN03", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TLN", nguon:"ngan-hang",
-  noiDung:"Các nguyên tố hoá học được chia thành nguyên tố đa lượng và nguyên tố vi lượng. Trong các vai trò: cấu tạo tế bào, cấu tạo enzyme, cấu tạo các đại phân tử hữu cơ, cấu tạo hormone, điều tiết quá trình trao đổi chất — có bao nhiêu vai trò là của nhóm nguyên tố vi lượng?",
-  dapAn:["3","3 vai trò","ba","ba vai trò"],
-  giaiThich:"Nguyên tố vi lượng tham gia: cấu tạo enzyme, cấu tạo hormone và điều tiết quá trình trao đổi chất trong tế bào." },
-{ id:"SH10-TLN04", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TLN", nguon:"ngan-hang",
-  noiDung:"Khi nói về vai trò sinh học của nước đối với tế bào, có bao nhiêu phát biểu sau đây đúng? (1) Môi trường khuếch tán và hòa tan các chất. (2) Cân bằng và ổn định nhiệt độ của tế bào và cơ thể. (3) Nguyên liệu tham gia phản ứng hóa sinh. (4) Thành phần chủ yếu cấu tạo nên tế bào. (5) Cung cấp năng lượng cho các hoạt động sống của tế bào.",
-  dapAn:["4","4 phát biểu","bốn","bốn phát biểu"],
-  giaiThich:"Các phát biểu (1), (2), (3), (4) đúng; phát biểu (5) sai vì nước không cung cấp năng lượng." },
-{ id:"SH10-TLN05", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"H", loai:"TLN", nguon:"ngan-hang",
-  noiDung:"Cho các phát biểu: (1) Phân tử nước được cấu tạo bằng liên kết hóa trị không phân cực giữa 2 nguyên tử H và 1 nguyên tử O. (2) Các phân tử nước có khả năng tương tác với nhau và hình thành nên mạng lưới nước. (3) Liên kết giữa các phân tử nước được gọi là liên kết hydrogen. (4) Trong phân tử nước, nguyên tử O mang điện tích dương, nguyên tử H mang điện tích âm. (5) Khi ở trạng thái đông cứng, các liên kết hydrogen luôn bền vững. Có bao nhiêu phát biểu sai?",
-  dapAn:["2","2 phát biểu","hai","hai phát biểu"],
-  giaiThich:"Phát biểu (1) và (4) sai: liên kết trong phân tử nước là cộng hóa trị phân cực; nguyên tử O mang điện tích âm, H mang điện tích dương." },
-// ---- Bài 3 (ma trận): tự soạn ----
-{ id:"SH10-TLN06", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TLN", nguon:"bo-sung",
-  noiDung:"Tập hợp nhiều quần thể của các loài khác nhau cùng sống trong một không gian xác định được gọi là gì?",
-  dapAn:["quần xã","quần xã sinh vật"],
-  giaiThich:"Quần xã sinh vật gồm nhiều quần thể của các loài khác nhau cùng sống trong một không gian xác định." },
-{ id:"SH10-TLN07", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TLN", nguon:"bo-sung",
-  noiDung:"Trong các cấp độ: tế bào, cơ thể, quần thể, quần xã, hệ sinh thái — cấp độ tổ chức sống lớn nhất là gì?",
-  dapAn:["hệ sinh thái"],
-  giaiThich:"Theo nguyên tắc thứ bậc, hệ sinh thái là cấp độ tổ chức lớn nhất trong các cấp độ đã học." },
-{ id:"SH10-TLN08", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TLN", nguon:"bo-sung",
-  noiDung:"Đặc tính mà tổ chức sống cấp trên có nhưng các cấp tổ chức sống cấp dưới không có được gọi là gì?",
-  dapAn:["đặc tính nổi trội","tính nổi trội","đặc tính nổi bật"],
-  giaiThich:"Đặc tính nổi trội hình thành do sự tương tác giữa các bộ phận cấu thành nên cấp tổ chức cao hơn." },
-// ---- Bài 5 (ma trận): tự soạn ----
-{ id:"SH10-TLN09", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TLN", nguon:"bo-sung",
-  noiDung:"Đơn phân cấu tạo nên protein là gì?",
-  dapAn:["acid amin","axit amin","amino acid","amino axit"],
-  giaiThich:"Protein được cấu tạo theo nguyên tắc đa phân với đơn phân là acid amin." },
-{ id:"SH10-TLN10", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TLN", nguon:"bo-sung",
-  noiDung:"Liên kết hóa học chủ yếu nối các acid amin trong phân tử protein được gọi là gì?",
-  dapAn:["liên kết peptit","liên kết peptid","liên kết peptide"],
-  giaiThich:"Các acid amin liên kết với nhau bằng liên kết peptit tạo thành chuỗi polipeptit." },
-{ id:"SH10-TLN11", bai:5, chuDe:"Các phân tử sinh học", mucDo:"H", loai:"TLN", nguon:"bo-sung",
-  noiDung:"Loại đường đa nào tham gia cấu tạo nên thành tế bào thực vật?",
-  dapAn:["xenlulozơ","xenlulozo","xenluloz","cellulose"],
-  giaiThich:"Xenlulozơ (cellulose) là đường đa cấu tạo nên thành tế bào thực vật." },
-{ id:"SH10-TLN12", bai:5, chuDe:"Các phân tử sinh học", mucDo:"VD", loai:"TLN", nguon:"bo-sung",
-  noiDung:"Nhỏ dung dịch iot vào một mẫu thử thấy xuất hiện màu xanh tím. Mẫu thử đó chứa loại đường nào?",
-  dapAn:["tinh bột"],
-  giaiThich:"Dung dịch iot gặp tinh bột cho màu xanh tím đặc trưng — cách nhận biết tinh bột." },
-{ id:"SH10-TLN13", bai:5, chuDe:"Các phân tử sinh học", mucDo:"VD", loai:"TLN", nguon:"bo-sung",
-  noiDung:"Hormone insulin do tuyến tụy tiết ra được cấu tạo từ loại phân tử sinh học nào?",
-  dapAn:["protein","prôtêin","protein","chất đạm","đạm"],
-  giaiThich:"Insulin là một loại protein (hormone có bản chất protein)." },
-{ id:"SH10-TLN14", bai:5, chuDe:"Các phân tử sinh học", mucDo:"VD", loai:"TLN", nguon:"bo-sung",
-  noiDung:"Trong xác định huyết thống và truy tìm tội phạm, người ta phân tích loại phân tử sinh học nào?",
-  dapAn:["dna","adn","axit nucleic","acid nucleic","nucleic acid"],
-  giaiThich:"Trình tự nucleotide trên DNA mang thông tin di truyền đặc trưng cho từng cá thể nên được dùng để xác định huyết thống, truy tìm tội phạm." },
-
-// ================= CÂU HỎI TỰ LUẬN =================
-{ id:"SH10-TL01", bai:4, chuDe:"Các nguyên tố hóa học và nước trong tế bào", mucDo:"B", loai:"TL", nguon:"ngan-hang", diemToiDa:1,
-  noiDung:"Trình bày nội dung cơ bản của học thuyết tế bào?",
-  huongDanCham:"ý 1 (0.25đ): Mọi cơ thể sống (đơn bào và đa bào) đều được cấu tạo từ tế bào.\ný 2 (0.25đ): Tế bào là đơn vị cấu trúc và chức năng cơ sở của sự sống.\ný 3 (0.25đ): Mọi tế bào đều được sinh ra từ các tế bào có trước bằng cách phân chia.\ný 4 (0.25đ): Trình bày mạch lạc, đầy đủ cả ba nội dung trên.",
-  giaiThich:"Ba nội dung cơ bản của học thuyết tế bào: (1) mọi sinh vật đều được cấu tạo từ tế bào; (2) tế bào là đơn vị cơ sở của sự sống; (3) tế bào mới được sinh ra từ tế bào có trước." },
-{ id:"SH10-TL02", bai:3, chuDe:"Các cấp độ tổ chức của thế giới sống", mucDo:"H", loai:"TL", nguon:"bo-sung", diemToiDa:1,
-  noiDung:"Giải thích vì sao tế bào được coi là đơn vị cấu trúc và chức năng của cơ thể sống. Cho một ví dụ minh họa.",
-  huongDanCham:"ý 1 (0.25đ): Đơn vị cấu trúc: mọi cơ thể sống đều được cấu tạo từ tế bào.\ný 2 (0.25đ): Đơn vị chức năng: mọi hoạt động sống của cơ thể đều được thực hiện nhờ hoạt động của tế bào.\ný 3 (0.25đ): Giải thích được mối liên hệ: tế bào thực hiện các hoạt động sống (chuyển hóa vật chất và năng lượng, sinh sản...) tạo nên hoạt động sống của cơ thể.\ný 4 (0.25đ): Cho ví dụ đúng và phù hợp (VD: tế bào hồng cầu vận chuyển O2 đi nuôi cơ thể; tế bào cơ co rút giúp cơ thể vận động...).",
-  giaiThich:"Tế bào là đơn vị cấu trúc (mọi cơ thể đều cấu tạo từ tế bào) và đơn vị chức năng (mọi hoạt động sống của cơ thể đều dựa trên hoạt động của tế bào)." },
-{ id:"SH10-TL03", bai:5, chuDe:"Các phân tử sinh học", mucDo:"VD", loai:"TL", nguon:"bo-sung", diemToiDa:1,
-  noiDung:"Một người muốn giảm cân nên quyết định loại bỏ hoàn toàn chất béo (lipid) khỏi khẩu phần ăn hằng ngày. Vận dụng kiến thức về các phân tử sinh học, em hãy cho biết quyết định này có hợp lí không? Vì sao?",
-  huongDanCham:"ý 1 (0.25đ): Không hợp lí (không nên loại bỏ hoàn toàn lipid khỏi khẩu phần ăn).\ný 2 (0.25đ): Lipid là nguồn dự trữ và cung cấp năng lượng quan trọng cho tế bào và cơ thể.\ný 3 (0.25đ): Lipid tham gia cấu tạo màng tế bào; là dung môi hòa tan các vitamin A, D, E, K; một số hormone được cấu tạo từ lipid (steroid).\ný 4 (0.25đ): Thiếu lipid gây rối loạn chuyển hóa, thiếu vitamin tan trong dầu, ảnh hưởng xấu đến sức khỏe — nên ăn uống hợp lí, hạn chế chứ không loại bỏ hoàn toàn.",
-  giaiThich:"Loại bỏ hoàn toàn lipid là không hợp lí vì lipid vừa cung cấp, dự trữ năng lượng, vừa cấu tạo màng tế bào, hòa tan vitamin A, D, E, K và tạo một số hormone." },
-
-// ================= BỔ SUNG BÀI 1 & BÀI 2 (theo SGK Kết nối tri thức, 09/10/2026) =================
-{ id:"SH10-TN046", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"Mục tiêu của sinh học là gì?",
-  luaChon:["Tìm hiểu cấu trúc và sự vận hành của các quá trình sống ở các cấp độ tổ chức của sự sống, qua đó điều khiển, tối ưu hóa nguồn tài nguyên phục vụ phát triển bền vững",
-           "Chế tạo ra các loài sinh vật mới theo ý muốn của con người",
-           "Thay thế hoàn toàn các ngành khoa học tự nhiên khác",
-           "Chỉ nghiên cứu cơ thể người để chữa bệnh"],
-  dapAn:0,
-  giaiThich:"Mục tiêu của sinh học là tìm hiểu cấu trúc và sự vận hành của các quá trình sống ở các cấp độ tổ chức của sự sống, qua đó con người có thể điều khiển, tối ưu hóa được nguồn tài nguyên sinh học cũng như phi sinh học, phục vụ cho sự phát triển bền vững của xã hội loài người." },
-{ id:"SH10-TN047", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"Lĩnh vực nghiên cứu cơ bản trong sinh học tập trung vào nội dung nào sau đây?",
-  luaChon:["Đưa các phát kiến sinh học vào ứng dụng trong thực tiễn đời sống",
-           "Tìm hiểu cấu trúc của các cấp độ tổ chức sống, phân loại, cách thức vận hành và tiến hóa của thế giới sống",
-           "Sản xuất thuốc chữa bệnh và vaccine",
-           "Lai tạo giống cây trồng, vật nuôi có năng suất cao"],
-  dapAn:1,
-  giaiThich:"Nghiên cứu cơ bản tập trung tìm hiểu cấu trúc các cấp độ tổ chức sống, phân loại, cách thức vận hành và tiến hóa của thế giới sống; còn nghiên cứu ứng dụng mới hướng tới đưa các phát kiến vào thực tiễn đời sống." },
-{ id:"SH10-TN048", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"Những hiểu biết về sinh học, đặc biệt về thế giới vi sinh vật, đã giúp con người",
-  luaChon:["giảm tỉ lệ bệnh tật và gia tăng đáng kể tuổi thọ nhờ cải thiện điều kiện vệ sinh, chăm sóc sức khỏe và điều trị bệnh tật",
-           "ngừng hoàn toàn việc sử dụng thuốc kháng sinh",
-           "loại bỏ mọi bệnh truyền nhiễm trên Trái Đất",
-           "tồn tại được mà không cần ăn uống"],
-  dapAn:0,
-  giaiThich:"Hiểu biết về sinh học, đặc biệt về thế giới vi sinh vật, đã giúp giảm tỉ lệ bệnh tật, gia tăng đáng kể tuổi thọ của con người qua việc cải thiện điều kiện vệ sinh, chăm sóc sức khỏe và điều trị bệnh tật." },
-{ id:"SH10-TN049", bai:1, chuDe:"Giới thiệu khái quát môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"\"Dấu vân tay DNA\" được ứng dụng trong ngành nào sau đây?",
-  luaChon:["Công nghệ chế biến thực phẩm",
-           "Pháp y: xác định nhân thân nạn nhân, quan hệ huyết thống và truy tìm tội phạm",
-           "Xây dựng cầu đường",
-           "Khai thác khoáng sản"],
-  dapAn:1,
-  giaiThich:"Trình tự nucleotide đặc trưng của mỗi người được gọi là \"dấu vân tay DNA\", giúp xác định nhân thân nạn nhân trong các vụ tai nạn, xác định quan hệ huyết thống và truy tìm tội phạm từ dấu vết tại hiện trường." },
-{ id:"SH10-TN050", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"Kính hiển vi điện tử khác kính hiển vi quang học ở điểm nào sau đây?",
-  luaChon:["Sử dụng chùm electron làm nguồn sáng thay cho ánh sáng thường",
-           "Chỉ quan sát được vật thể có kích thước lớn",
-           "Không cần mẫu vật khi quan sát",
-           "Độ phóng đại tối đa chỉ bằng một nửa kính hiển vi quang học"],
-  dapAn:0,
-  giaiThich:"Kính hiển vi quang học dùng ánh sáng (điện hoặc mặt trời) chiếu lên mẫu vật; kính hiển vi điện tử dùng chùm electron chiếu qua hoặc lên bề mặt mẫu vật nên có độ phân giải cao hơn nhiều." },
-{ id:"SH10-TN051", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"B", loai:"TN", nguon:"bo-sung",
-  noiDung:"Máy li tâm được sử dụng trong kĩ thuật nào sau đây?",
-  luaChon:["Kĩ thuật phân đoạn tế bào: tách các bào quan dựa trên khối lượng của chúng",
-           "Kĩ thuật gây đột biến nhân tạo",
-           "Kĩ thuật nuôi cấy mô tế bào",
-           "Kĩ thuật giải trình tự gene"],
-  dapAn:0,
-  giaiThich:"Máy li tâm được dùng trong kĩ thuật phân đoạn tế bào: phá vỡ tế bào rồi li tâm ở các tốc độ vòng quay khác nhau để tách riêng các bào quan có khối lượng khác nhau." },
-{ id:"SH10-TN052", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"H", loai:"TN", nguon:"bo-sung",
-  noiDung:"Vì sao kính hiển vi điện tử quan sát được cấu trúc siêu hiển vi của tế bào mà kính hiển vi quang học không làm được?",
-  luaChon:["Vì kính hiển vi điện tử có kích thước lớn hơn",
-           "Vì kính hiển vi điện tử có độ phân giải cao hơn nhiều (nhỏ hơn 1 Å, trong khi kính hiển vi quang học chỉ khoảng 200 nm)",
-           "Vì kính hiển vi quang học không cần nguồn sáng",
-           "Vì mẫu vật quan sát bằng kính hiển vi điện tử không cần xử lí"],
-  dapAn:1,
-  giaiThich:"Độ phân giải của kính hiển vi quang học chỉ khoảng 200 nm nên không thấy được cấu trúc siêu hiển vi; kính hiển vi điện tử có độ phân giải nhỏ hơn 1 Å nhờ dùng chùm electron." },
-{ id:"SH10-TN053", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"H", loai:"TN", nguon:"bo-sung",
-  noiDung:"Trong một thí nghiệm kiểm chứng, nhóm đối chứng và nhóm thực nghiệm khác nhau ở điểm nào?",
-  luaChon:["Mọi yếu tố đều giống nhau ngoại trừ yếu tố cần nghiên cứu",
-           "Nhóm đối chứng không cần tuân thủ điều kiện thí nghiệm",
-           "Hai nhóm sử dụng hai đối tượng nghiên cứu hoàn toàn khác nhau",
-           "Nhóm thực nghiệm không cần ghi chép số liệu"],
-  dapAn:0,
-  giaiThich:"Thí nghiệm kiểm chứng gồm lô đối chứng và lô thí nghiệm: đối tượng và mọi yếu tố môi trường ở hai lô đều giống nhau, ngoại trừ yếu tố cần nghiên cứu; so sánh sự khác biệt giữa hai lô sẽ thấy được ảnh hưởng của yếu tố đó." },
-{ id:"SH10-DS05", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"bo-sung",
-  noiDung:"Về làm việc an toàn trong phòng thí nghiệm, mỗi nhận định sau đây là Đúng hay Sai?",
-  cacY:[
-    { kyHieu:"a", noiDung:"Kính hiển vi quang học sử dụng ánh sáng (điện hoặc mặt trời) chiếu lên mẫu vật.", mucDo:"B", dapAn:true },
-    { kyHieu:"b", noiDung:"Máy li tâm tách các bào quan dựa trên khối lượng khác nhau của chúng.", mucDo:"H", dapAn:true },
-    { kyHieu:"c", noiDung:"Có thể ăn uống nhẹ trong phòng thí nghiệm nếu cẩn thận không làm đổ vào mẫu vật.", mucDo:"VD", dapAn:false },
-    { kyHieu:"d", noiDung:"Trước khi sử dụng thiết bị, người nghiên cứu cần nắm quy tắc vận hành và ghi nhật kí làm việc.", mucDo:"VD", dapAn:true }
-  ],
-  giaiThich:"Ý c Sai vì nội quy phòng thí nghiệm cấm ăn uống, đùa nghịch trong phòng thí nghiệm; không nếm hoặc ngửi hóa chất." },
-{ id:"SH10-DS06", bai:2, chuDe:"Phương pháp nghiên cứu và học tập môn Sinh học", mucDo:"HON_HOP", loai:"DS", nguon:"bo-sung",
-  noiDung:"Về tiến trình nghiên cứu khoa học, mỗi nhận định sau đây là Đúng hay Sai?",
-  cacY:[
-    { kyHieu:"a", noiDung:"Mọi nghiên cứu sinh học đều bắt đầu từ quan sát để thu thập dữ liệu.", mucDo:"B", dapAn:true },
-    { kyHieu:"b", noiDung:"Giả thuyết khoa học là cách giải thích có thể kiểm chứng được bằng thực nghiệm.", mucDo:"H", dapAn:true },
-    { kyHieu:"c", noiDung:"Nếu kết quả thí nghiệm không ủng hộ giả thuyết, nhà khoa học nên sửa số liệu cho khớp với giả thuyết.", mucDo:"VD", dapAn:false },
-    { kyHieu:"d", noiDung:"Giả thuyết được nhiều nhà khoa học kiểm chứng trên nhiều đối tượng và được thừa nhận sẽ trở thành học thuyết khoa học.", mucDo:"VD", dapAn:true }
-  ],
-  giaiThich:"Ý c Sai vì số liệu phải khách quan, trung thực; khi kết quả không ủng hộ giả thuyết thì giả thuyết bị bác bỏ và cần hình thành giả thuyết mới." },
-
-];
-
 
 /* =====================================================================
    PHẦN 4: LOGIC LÀM BÀI
@@ -892,12 +398,22 @@ const NGAN_HANG_SINH10 = [
 const state = {
   dsCau: [], cauHienTai: 0, traLoi: {},
   batDau: 0, timerId: null, conLai: 0,
-  daNop: false, ketQua: null, hoTen: "", lop: ""
+  daNop: false, ketQua: null, hoTen: "", lop: "", maDe: "", gioiHanPhut: 45
 };
 
 function $(id){ return document.getElementById(id); }
-function tronMang(a){
-  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+function mulberry32(seed){
+  let a=seed>>>0;
+  return function(){
+    a|=0; a=(a+0x6D2B79F5)|0;
+    let t=Math.imul(a^(a>>>15),1|a);
+    t=(t+Math.imul(t^(t>>>7),61|t))^t;
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
+}
+function tronMang(a, rnd){
+  const r=rnd||Math.random;
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
   return a;
 }
 function hienManHinh(id){
@@ -937,21 +453,21 @@ function dungTLN(cau, traLoi){
 }
 
 /* ---------- BỐC ĐỀ NGẪU NHIÊN THEO MA TRẬN ---------- */
-function tronDapAnTN(cau){
+function tronDapAnTN(cau, rnd){
   const c = JSON.parse(JSON.stringify(cau));
   const order = c.luaChon.map((_,i)=>i);
-  tronMang(order);
+  tronMang(order, rnd);
   c.luaChon = order.map(i=>cau.luaChon[i]);
   c.dapAn = order.indexOf(cau.dapAn);
   return c;
 }
-function bocTheoSlot(danhSachSlot, loai){
+function bocTheoSlot(danhSachSlot, loai, rnd){
   const de=[];
   danhSachSlot.forEach(slot=>{
     const pool = NGAN_HANG_SINH10.filter(q=>q.loai===loai && q.bai===slot.bai && (slot.mucDo? q.mucDo===slot.mucDo : true));
-    const chon = tronMang(pool.slice()).slice(0, slot.soCau);
+    const chon = tronMang(pool.slice(), rnd).slice(0, slot.soCau);
     chon.forEach(q=>{
-      const c = (loai==='TN') ? tronDapAnTN(q) : JSON.parse(JSON.stringify(q));
+      const c = (loai==='TN') ? tronDapAnTN(q, rnd) : JSON.parse(JSON.stringify(q));
       de.push(c);
     });
   });
@@ -959,10 +475,13 @@ function bocTheoSlot(danhSachSlot, loai){
 }
 function buildDeThi(){
   const de=[];
-  bocTheoSlot(MA_TRAN.tracnghiem,'TN').forEach(c=>{ c.phan=1; de.push(c); });
-  bocTheoSlot(MA_TRAN.dungsai,'DS').forEach(c=>{ c.phan=1; de.push(c); });
-  bocTheoSlot(MA_TRAN.traloiNgan,'TLN').forEach(c=>{ c.phan=1; de.push(c); });
-  bocTheoSlot(MA_TRAN.tuluuan,'TL').forEach(c=>{ c.phan=2; de.push(c); });
+  const coDinh = state.maDe!=="";
+  const MT = coDinh ? MA_TRAN_24 : MA_TRAN;
+  const rnd = coDinh ? mulberry32(parseInt(state.maDe,10)*1000+7) : Math.random;
+  bocTheoSlot(MT.tracnghiem,'TN',rnd).forEach(c=>{ c.phan=1; de.push(c); });
+  bocTheoSlot(MT.dungsai,'DS',rnd).forEach(c=>{ c.phan=1; de.push(c); });
+  bocTheoSlot(MT.traloiNgan,'TLN',rnd).forEach(c=>{ c.phan=1; de.push(c); });
+  bocTheoSlot(MT.tuluuan,'TL',rnd).forEach(c=>{ c.phan=2; de.push(c); });
   return de;
 }
 
@@ -974,17 +493,57 @@ function vaoLamBai(){
   if(lop.length<2){ $('loi-thong-tin').textContent='Em nhập lớp của mình nhé (VD: 10A1).'; return; }
   $('loi-thong-tin').textContent='';
   state.hoTen=hoTen; state.lop=lop;
+  const btnChon=document.querySelector('#chon-ma-de .made-btn.chon');
+  state.maDe=btnChon?btnChon.getAttribute('data-made'):"";
   batDauLamBai();
 }
+
+/* Vẽ cấu trúc đề theo mã đề đã chọn (ngẫu nhiên GK1 hoặc đề cố định 102/103/104) */
+function maDeDangChon(){
+  const b=document.querySelector('#chon-ma-de .made-btn.chon');
+  return b?b.getAttribute('data-made'):"";
+}
+function veCauTrucDe(){
+  const coDinh = maDeDangChon()!=="";
+  const rows = coDinh ? [
+    ['Trắc nghiệm nhiều lựa chọn','24 câu × 0,25đ'],
+    ['Trắc nghiệm đúng/sai','2 câu × 4 ý × 0,25đ'],
+    ['Trả lời ngắn','8 câu × 0,25đ'],
+    ['Phạm vi','Bài 1 → Bài 6'],
+    ['Thời gian làm bài','60 phút'],
+    ['Tổng điểm','10 điểm']
+  ] : [
+    ['Phần I — Trắc nghiệm nhiều lựa chọn','12 câu × 0,25đ'],
+    ['Phần I — Trắc nghiệm đúng/sai','2 câu × 4 ý × 0,25đ'],
+    ['Phần I — Trả lời ngắn','8 câu × 0,25đ'],
+    ['Phần II — Tự luận (cô/chú chấm)','3 câu × 1,0đ'],
+    ['Phạm vi','Bài 1 → Bài 6'],
+    ['Thời gian làm bài','45 phút'],
+    ['Tổng điểm','10 điểm']
+  ];
+  $('cau-truc-de').innerHTML = rows.map(function(r){
+    return '<div class="info-row"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>';
+  }).join('')
+    + '<p class="muted" style="margin-top:10px">'
+    + (coDinh
+      ? 'Đề cố định: cả lớp làm chung một đề, tiện chữa bài chung. Cố gắng làm hết sức mình nhé!'
+      : 'Mỗi lượt làm, máy bốc ngẫu nhiên câu hỏi theo đúng ma trận nên đề của mỗi bạn khác nhau. Cố gắng làm hết sức mình nhé!')
+    + '</p>';
+  $('mo-ta-ma-de').textContent = coDinh
+    ? 'Đề cố định '+maDeDangChon()+': 34 câu (24 nhiều lựa chọn + 2 đúng/sai + 8 trả lời ngắn), 60 phút, thang 10 điểm — không có tự luận.'
+    : 'Đề ngẫu nhiên theo ma trận GK1: 25 câu (12 TN + 2 ĐS + 8 trả lời ngắn + 3 tự luận), 45 phút, thang 10 điểm.';
+}
+
 
 /* ---------- MÀN HÌNH: LÀM BÀI ---------- */
 function batDauLamBai(){
   state.dsCau=buildDeThi();
   state.cauHienTai=0; state.traLoi={}; state.daNop=false; state.ketQua=null;
   state.batDau=Date.now();
-  state.conLai=CONFIG.GIOI_HAN_PHUT*60;
+  state.gioiHanPhut = state.maDe!=="" ? 60 : CONFIG.GIOI_HAN_PHUT;
+  state.conLai=state.gioiHanPhut*60;
   clearInterval(state.timerId);
-  if(CONFIG.GIOI_HAN_PHUT>0){ state.timerId=setInterval(capNhatDongHo,1000); }
+  if(state.gioiHanPhut>0){ state.timerId=setInterval(capNhatDongHo,1000); }
   capNhatDongHo();
   $('luoi-cau-hoi').classList.remove('mo');
   $('nut-luoi-cau').classList.remove('mo');
@@ -994,7 +553,7 @@ function batDauLamBai(){
 function capNhatDongHo(){
   $('dong-ho-so').textContent=giayThanhChu(state.conLai);
   $('dong-ho').classList.toggle('het-gio', state.conLai<=300);
-  if(CONFIG.GIOI_HAN_PHUT>0 && state.conLai<=0){ clearInterval(state.timerId); nopBai(true); return; }
+  if(state.gioiHanPhut>0 && state.conLai<=0){ clearInterval(state.timerId); nopBai(true); return; }
   state.conLai--;
 }
 function cauDangLam(){ return state.dsCau[state.cauHienTai]; }
@@ -1158,9 +717,10 @@ function nopBai(hetGio){
   const ma='SH10-'+Date.now().toString(36).slice(-4).toUpperCase()
            +Math.random().toString(36).slice(2,4).toUpperCase();
   state.ketQua={
-    hoTen:state.hoTen, lop:state.lop, bai:'Kiểm tra giữa kỳ I (theo ma trận)',
+    hoTen:state.hoTen, lop:state.lop, maDe:(state.maDe||'NGAU_NHIEN'),
+    bai: state.maDe?('Luyện đề cố định '+state.maDe+' (24 TN + 2 ĐS + 8 TLN)'):'Kiểm tra giữa kỳ I (theo ma trận)',
     diemP1:kq.dP1, diemTN:kq.dTN, diemDS:kq.dDS, diemTLN:kq.dTLN,
-    trangThaiTuLuan:'Chờ chấm', diemTamTinh:kq.dP1,
+    trangThaiTuLuan:(state.maDe?'—':'Chờ chấm'), diemTamTinh:kq.dP1,
     tongSoCau:state.dsCau.length,
     thoiGianGiay:giayLam, thoiGianChu:giayThanhChu(giayLam),
     maKetQua:ma, thoiDiemNop:new Date().toISOString(),
@@ -1176,19 +736,19 @@ function nopBai(hetGio){
 function veKetQua(){
   const kq=state.ketQua;
   $('diem-so').textContent=kq.diemP1;
-  $('diem-so-chu').textContent='/ 7 điểm trắc nghiệm (tạm tính)';
+  const coDinh = kq.maDe && kq.maDe!=='NGAU_NHIEN'; const thangDiem = coDinh?10:7; $('diem-so-chu').textContent=coDinh?'/ 10 điểm':'/ 7 điểm trắc nghiệm (tạm tính)';
   const C=402.1;
-  $('vong-diem').style.strokeDashoffset=C*(1-kq.diemP1/7);
-  $('vong-diem').setAttribute('stroke',kq.diemP1>=5.6?'#2E7D32':(kq.diemP1>=3.5?'#0288D1':'#D32F2F'));
+  $('vong-diem').style.strokeDashoffset=C*(1-kq.diemP1/thangDiem);
+  $('vong-diem').setAttribute('stroke',coDinh?(kq.diemP1>=8?'#2E7D32':(kq.diemP1>=5?'#0288D1':'#D32F2F')):(kq.diemP1>=5.6?'#2E7D32':(kq.diemP1>=3.5?'#0288D1':'#D32F2F')));
   $('diem-phan-1').textContent=kq.diemP1+'đ';
-  $('diem-phan-2').textContent='Chờ chấm';
+  $('diem-phan-2').textContent=coDinh?'—':'Chờ chấm';
 
   const p1=kq.chiTiet.filter(x=>x.cau.phan===1);
   const dungHT=p1.filter(x=>x.dungHoanToan).length;
   $('tom-tat-ket-qua').innerHTML=
-    '<div class="ket-qua-dong">Phần I: đúng hoàn toàn '+dungHT+' / '+p1.length+' câu</div>'
-    +'<div class="ket-qua-dong" style="color:var(--chu-phu)">Phần II: 3 câu tự luận đang chờ cô/chú chấm (+3,0đ)</div>'
-    +'<p class="muted">Thời gian làm bài: '+kq.thoiGianChu+(kq.hetGio?' (hết giờ)':'')+' · '+thoatHTML(kq.hoTen)+' · Lớp '+thoatHTML(kq.lop)+'</p>';
+    '<div class="ket-qua-dong">Trắc nghiệm: đúng hoàn toàn '+dungHT+' / '+p1.length+' câu</div>'
+    +(coDinh?'':'<div class="ket-qua-dong" style="color:var(--chu-phu)">Phần II: 3 câu tự luận đang chờ cô/chú chấm (+3,0đ)</div>')
+    +'<p class="muted">Thời gian làm bài: '+kq.thoiGianChu+(kq.hetGio?' (hết giờ)':'')+(coDinh?' · Đề '+thoatHTML(kq.maDe):'')+' · '+thoatHTML(kq.hoTen)+' · Lớp '+thoatHTML(kq.lop)+'</p>';
 
   let yeuNhat=null, tiLeThap=2;
   Object.keys(kq.theoChuDe).forEach(cd=>{
@@ -1197,7 +757,7 @@ function veKetQua(){
   });
   const d=kq.diemP1;
   let loi='';
-  if(d>=6.3)      loi='Tuyệt vời! Phần trắc nghiệm em nắm rất chắc. Giờ chờ điểm tự luận nữa nhé!';
+  if(coDinh){ if(d>=9) loi='Xuất sắc! Đề 34 câu mà em làm tốt thế này thì kiểm tra thật không lo gì rồi!'; else if(d>=8) loi='Giỏi lắm! Kiến thức nắm chắc rồi, chỉ cần rà soát lại vài chỗ nhỏ nữa.'; else if(d>=6.5) loi='Khá tốt đấy! Em đã nắm được phần lớn kiến thức, cố thêm chút nữa nhé.'; else if(d>=5) loi='Em đã cố gắng rồi! Hãy xem lại đáp án và giải thích bên dưới, rồi làm lại đề này một lượt nữa nhé.'; else loi='Đừng nản nhé! Em hãy đọc kỹ phần giải thích từng câu, ôn lại bài rồi thử lại đề này — cô tin em sẽ tiến bộ nhanh thôi.'; }else if(d>=6.3) loi='Tuyệt vời! Phần trắc nghiệm em nắm rất chắc. Giờ chờ điểm tự luận nữa nhé!';
   else if(d>=5.6) loi='Giỏi lắm! Trắc nghiệm tốt rồi, chỉ cần rà soát lại vài chỗ nhỏ nữa.';
   else if(d>=4.5) loi='Khá tốt đấy! Em đã nắm được phần lớn kiến thức, cố thêm chút nữa nhé.';
   else if(d>=3.5) loi='Em đã cố gắng rồi! Hãy xem lại đáp án và giải thích bên dưới, rồi làm đề mới một lượt nữa nhé.';
@@ -1253,7 +813,7 @@ function veKetQua(){
 function payloadGui(){
   const kq=state.ketQua;
   return {
-    hoTen:kq.hoTen, lop:kq.lop, bai:kq.bai,
+    hoTen:kq.hoTen, lop:kq.lop, bai:kq.bai, maDe:kq.maDe,
     diemP1:kq.diemP1, diemTN:kq.diemTN, diemDS:kq.diemDS, diemTLN:kq.diemTLN,
     trangThaiTuLuan:kq.trangThaiTuLuan, diemTamTinh:kq.diemTamTinh,
     thoiGianLamGiay:kq.thoiGianGiay, thoiGianLam:kq.thoiGianChu,
@@ -1326,6 +886,14 @@ async function guiLai(){
 document.addEventListener('DOMContentLoaded',()=>{
   $('nut-bat-dau').addEventListener('click',()=>hienManHinh('man-hinh-thong-tin'));
   $('nut-tro-ve-chinh').addEventListener('click',()=>hienManHinh('man-hinh-chinh'));
+  document.querySelectorAll('#chon-ma-de .made-btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('#chon-ma-de .made-btn').forEach(function(x){x.classList.remove('chon');});
+      b.classList.add('chon');
+      veCauTrucDe();
+    });
+  });
+  veCauTrucDe();
   $('nut-vao-lam-bai').addEventListener('click',vaoLamBai);
   $('nut-luoi-cau').addEventListener('click',()=>{
     $('luoi-cau-hoi').classList.toggle('mo');
