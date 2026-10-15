@@ -1,0 +1,13 @@
+Hãy cập nhật dự án GitHub Pages vvbhaidocbinhkieucailay-lang/on-tap-cong-nghe-12 bằng bốn tệp trong thư mục sinh-10 của gói mã nguồn kèm theo: index.html, styles.css, app.js, exams.js. Chỉ cập nhật trang /sinh-10/, giữ trang Công nghệ 12 ở thư mục gốc.
+
+Yêu cầu đã triển khai trong gói:
+1. Học sinh nhập họ tên, chọn lớp 10A10; chỉ có mã đề 102 và 103.
+2. Đọc ?made=102 hoặc ?made=103 ngay khi mở trang. Cho phép đổi mã trước khi làm; đổi mã không bị link cũ ép ngược lại.
+3. Mỗi đề cố định 24 TN, 2 đúng/sai (8 ý), 8 chọn ý bằng số, 60 phút, tổng 10 điểm.
+4. Câu trả lời ngắn có nhận định đánh số. Học sinh bấm nhiều ý hoặc nhập tập số. Nếu đáp án [1,4] thì 1,4 và 4,1 đều đúng; thiếu hoặc thừa ý đều sai; 14 không được hiểu thành 1,4.
+5. Sau nộp hiện điểm, ý đúng/ý sai, ý chọn thừa/còn thiếu, giải thích và cho làm lại. Tải kết quả dạng TXT.
+6. Hiện trung thực rằng kết quả chấm trên thiết bị và chưa tự động gửi giáo viên. Không thêm lời báo đã gửi, không nối dịch vụ bên ngoài khi chưa có cấu hình thật.
+7. Dùng dữ liệu đã hiệu chỉnh trong exams.js, không lấy lại ngân hàng cũ để ghi đè. Đọc BAO_CAO_Ra_SOAT.md trước khi chỉnh nội dung.
+8. Kiểm tra cả hai link và màn hình điện thoại trước khi hoàn tất triển khai.
+
+Không đổi đường dẫn /sinh-10/, không tạo thư mục lồng sinh-10/sinh-10, không thêm mã 104 hoặc chế độ đề ngẫu nhiên. Không cần máy chủ, cơ sở dữ liệu hay bước biên dịch. Báo rõ bốn tệp đã cập nhật và trạng thái GitHub Pages sau triển khai.
