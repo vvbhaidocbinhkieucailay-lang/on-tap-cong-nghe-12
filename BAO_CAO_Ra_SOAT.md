@@ -57,7 +57,9 @@ Sau đối chiếu cuối, giữ nguyên các đáp án trong `exams.js`; các h
 
 515 kiểm tra logic đạt: đúng tối đa 10 điểm, bỏ trống 0 điểm, đúng từng ý Đ/S được 0,25; mọi tổ hợp chọn số đều chấm theo tập hợp; chấp nhận đảo thứ tự, từ chối số không hợp lệ. Đối chiếu dữ liệu xác nhận chỉ những câu trong danh sách hiệu chỉnh và phần TLN thay đổi.
 
-Kiểm thử trình duyệt: hai URL chọn đúng mã; chọn lớp 10A10; bắt đầu làm; chuyển câu; nhập số và đồng bộ trạng thái nút; báo lỗi `14`; `4,1` được chấm đúng khi đáp án `[1,4]`; `1,2` được chấm sai và hiện “chọn thừa 2, còn thiếu 4”; cảnh báo bài chưa làm hết; lọc câu sai; tải kết quả TXT. Không thấy lỗi JavaScript trong lượt thử. Đã xem bố cục điện thoại và máy tính. Chưa thử gửi máy chủ vì bản gốc không có địa chỉ nhận bài; chưa triển khai GitHub Pages.
+Kiểm thử trình duyệt: hai URL chọn đúng mã; chọn lớp 10A10; bắt đầu làm; chuyển câu; nhập số và đồng bộ trạng thái nút; báo lỗi `14`; `4,1` được chấm đúng khi đáp án `[1,4]`; `1,2` được chấm sai và hiện “chọn thừa 2, còn thiếu 4”; cảnh báo bài chưa làm hết; lọc câu sai; tải kết quả TXT. Không thấy lỗi JavaScript trong lượt thử. Đã xem bố cục điện thoại và máy tính. Trang đã triển khai trên GitHub Pages.
+
+Cập nhật nhận bài ngày 15/10/2026: thêm số thứ tự và mã học sinh dạng 10A10-01; Google Apps Script chấm lại, lưu lịch sử và bảng kết quả 5 cột theo lớp/số thứ tự. Đã thử nộp thật đề 102 và 103 từ trình duyệt, kiểm tra đúng điểm 0,25 cho một câu đúng, có biên nhận xác nhận lưu. Gửi lại cùng mã lượt không thêm dòng; bảng tổng hợp xếp đúng 98 trước 99. Đã dọn hai dòng thử xác định rõ. Bộ chấm máy chủ và xử lý trùng qua 281 kiểm tra; hàng chờ qua kiểm tra mất mạng, phản hồi sai mã, đúng biên nhận và lệch điểm.
 
 ## Đáp án phần chọn ý bằng số
 

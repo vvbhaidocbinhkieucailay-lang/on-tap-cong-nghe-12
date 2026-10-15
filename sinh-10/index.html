@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#176b53">
   <title>Ôn tập Sinh học 10 · Lớp 10A10</title>
-  <link rel="stylesheet" href="styles.css?v=20261015">
+  <link rel="stylesheet" href="styles.css?v=20261015b">
   <script defer src="exams.js?v=20261015"></script>
-  <script defer src="app.js?v=20261015"></script>
+  <script defer src="submission.js?v=20261015b"></script>
+  <script defer src="app.js?v=20261015b"></script>
 </head>
 <body>
   <header class="site-header"><a href="./" aria-label="Trang chủ ôn tập"><span class="logo" aria-hidden="true">✳</span> Góc ôn tập <span class="subject">SINH HỌC 10</span></a><span class="class-tag">10A10</span></header>
@@ -19,6 +20,8 @@
           <div class="card-title"><span class="step">01</span><h2>Sẵn sàng làm bài</h2></div>
           <label for="student-name">Họ và tên</label><input id="student-name" name="student" autocomplete="name" maxlength="60" required minlength="2" placeholder="Nhập họ và tên của em">
           <label for="student-class">Lớp</label><select id="student-class" name="class" required><option value="">Chọn lớp</option><option value="10A10">10A10</option></select>
+          <label for="student-number">Số thứ tự trong danh sách lớp</label><input id="student-number" type="number" min="1" max="99" step="1" required inputmode="numeric" placeholder="Ví dụ: 1" aria-describedby="student-id-preview">
+          <p id="student-id-preview" class="small" aria-live="polite">Mã học sinh được tạo từ lớp và số thứ tự, ví dụ 10A10-01.</p>
           <fieldset class="exam-choice"><legend>Chọn mã đề</legend><label><input type="radio" name="exam" value="102" checked><span>Đề <b>102</b></span></label><label><input type="radio" name="exam" value="103"><span>Đề <b>103</b></span></label></fieldset>
           <p id="link-note" class="small" aria-live="polite"></p><p id="form-error" class="error" role="alert"></p>
           <button class="primary full" type="submit">Bắt đầu làm bài <span aria-hidden="true">→</span></button>
@@ -26,7 +29,7 @@
         <aside class="guide">
           <div class="stats"><div><b>34</b><span>câu hỏi</span></div><div><b>60</b><span>phút</span></div><div><b>10</b><span>điểm</span></div></div>
           <div class="card"><div class="card-title"><span class="step">02</span><h2>Cách làm bài</h2></div><ul class="instructions"><li><b>24 câu trắc nghiệm:</b> chọn một đáp án A, B, C hoặc D.</li><li><b>2 câu đúng/sai:</b> chọn Đúng hoặc Sai cho từng ý.</li><li><b>8 câu chọn ý bằng số:</b> chọn tất cả nhận định đúng. Có thể bấm các ý hoặc nhập số, ví dụ <strong>1, 4</strong>.</li></ul><p class="tip">Phần chọn ý bằng số chỉ được điểm khi chọn đúng và đủ, không thêm ý sai. Thứ tự các số không ảnh hưởng kết quả.</p><p class="small">Sau khi nộp, em được xem điểm, các ý đúng/sai và giải thích. Mỗi mã đề giữ nguyên nội dung để em làm lại và theo dõi tiến bộ.</p></div>
-          <p class="local-note">Bài luyện tập được chấm trên thiết bị của em. Kết quả chưa tự động gửi cho giáo viên.</p>
+          <p class="local-note">Khi nộp bài, mã học sinh, họ tên, lớp, câu trả lời và điểm được gửi vào bảng riêng của giáo viên. Em nhập đúng số thứ tự theo danh sách lớp.</p>
         </aside>
       </div>
     </section>
@@ -38,7 +41,8 @@
     <section id="results" hidden>
       <div class="result-heading"><p class="eyebrow">HOÀN THÀNH LƯỢT ÔN TẬP</p><h1 class="compact">Mỗi lần làm, hiểu thêm một chút.</h1><p id="result-student" class="small"></p></div>
       <div class="card result-overview"><div class="score"><b id="score">0</b><span>/ 10 điểm</span></div><div class="result-description"><h2 id="feedback"></h2><p id="result-summary"></p><div id="breakdown" class="breakdown"></div></div></div>
-      <div class="result-actions"><button id="retry" class="primary" type="button">Làm lại đề này</button><button id="choose-exam" class="secondary" type="button">Chọn đề khác</button><button id="download" class="secondary" type="button">Tải kết quả</button></div><p class="local-note">Kết quả này chưa được gửi cho giáo viên. Em có thể tải kết quả hoặc chụp màn hình để gửi theo hướng dẫn của thầy/cô.</p>
+      <div class="card"><p id="save-status" role="status" aria-live="polite"></p><button id="resend" class="secondary" type="button" hidden>Gửi lại kết quả</button></div>
+      <div class="result-actions"><button id="retry" class="primary" type="button">Làm lại đề này</button><button id="choose-exam" class="secondary" type="button">Chọn đề khác</button><button id="download" class="secondary" type="button">Tải kết quả</button></div><p class="local-note">Chờ thông báo “Đã lưu vào bảng của giáo viên” trước khi đóng trang. Nếu chưa lưu được, em bấm Gửi lại hoặc tải kết quả để giữ lại.</p>
       <div class="review-heading"><h2>Đối chiếu & hiểu bài</h2><label><input id="only-errors" type="checkbox"> Chỉ xem câu chưa đúng</label></div><div id="review"></div>
     </section>
     <noscript><p class="card error">Em cần bật JavaScript trong trình duyệt để làm bài.</p></noscript>

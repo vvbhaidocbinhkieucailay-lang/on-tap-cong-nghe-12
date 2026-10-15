@@ -7,7 +7,7 @@ const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'
 const formatScore = n => n.toLocaleString('vi-VN', {maximumFractionDigits:2});
 const formatTime = seconds => `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
 const typeName = q => ({TN:'Trắc nghiệm', DS:'Đúng / Sai', TLN:'Chọn ý bằng số'}[q.loai]);
-const state = {code:'102', name:'', className:'', index:0, answers:{}, started:0, active:false, timer:null, result:null};
+const state = {code:'102', name:'', className:'', number:0, studentId:'', submissionId:'', index:0, answers:{}, started:0, active:false, timer:null, result:null};
 
 // Tách số nguyên theo dấu phẩy, chấm phẩy hoặc khoảng trắng; không suy diễn "14" thành "1, 4".
 function parseNumbers(raw, count) {
@@ -50,10 +50,11 @@ function setCode(code,updateURL=false) {
   if(updateURL) {const url=new URL(location.href);url.searchParams.set('made',state.code);try{history.replaceState(null,'',url);}catch{}}
 }
 function startExam() {
+  state.submissionId=crypto.randomUUID();
   clearInterval(state.timer);state.index=0;state.answers={};state.started=Date.now();state.active=true;state.result=null;
   $('only-errors').checked=false;
   $('quiz-code').textContent=`SINH HỌC 10 · ĐỀ ${state.code}`;
-  $('student-info').textContent=`${state.name} · Lớp ${state.className}`;
+  $('student-info').textContent=`${state.name} · ${state.studentId} · Lớp ${state.className}`;
   showScreen('quiz');renderQuestion();updateTimer();state.timer=setInterval(updateTimer,1000);
 }
 function updateTimer() {
@@ -108,13 +109,15 @@ function requestSubmit() {
 function submitExam(expired=false) {
   if(!state.active)return;state.active=false;clearInterval(state.timer);
   if($('submit-dialog').open)$('submit-dialog').close();
-  state.result={...gradeExam(questions(),state.answers),code:state.code,name:state.name,className:state.className,elapsed:Math.min(LIMIT_SECONDS,Math.floor((Date.now()-state.started)/1000)),submittedAt:new Date().toISOString(),expired};
+  state.result={...gradeExam(questions(),state.answers),code:state.code,name:state.name,className:state.className,studentId:state.studentId,number:state.number,submissionId:state.submissionId,elapsed:Math.min(LIMIT_SECONDS,Math.floor((Date.now()-state.started)/1000)),submittedAt:new Date().toISOString(),expired,saveStatus:'sending'};
   const r=state.result;
-  $('score').textContent=formatScore(r.score);$('result-student').textContent=`${r.name} · ${r.className} · Đề ${r.code} · ${formatTime(r.elapsed)}${expired?' · Hết giờ':''}`;
+  $('score').textContent=formatScore(r.score);$('result-student').textContent=`${r.name} · ${r.studentId} · ${r.className} · Đề ${r.code} · ${formatTime(r.elapsed)}${expired?' · Hết giờ':''}`;
   $('feedback').textContent=r.score>=8?'Em đã nắm tốt nhiều nội dung.':r.score>=5?'Cùng xem lại những câu còn vướng nhé.':'Hãy đọc giải thích rồi luyện lại từng phần.';
   $('result-summary').textContent=`Đúng hoàn toàn ${r.correct} / ${r.rows.length} câu. Câu đúng/sai được tính 0,25 điểm cho mỗi ý trả lời đúng.`;
   $('breakdown').innerHTML=`<span>Trắc nghiệm: ${formatScore(r.totals.TN)} / 6</span><span>Đúng/sai: ${formatScore(r.totals.DS)} / 2</span><span>Chọn ý bằng số: ${formatScore(r.totals.TLN)} / 2</span>`;
   renderReview();showScreen('results');
+  $('resend').hidden=true;
+  window.Submissions.enqueue({version:'20261015',submissionId:r.submissionId,studentId:r.studentId,number:r.number,name:r.name,className:r.className,code:r.code,score:r.score,elapsed:r.elapsed,answers:structuredClone(state.answers)});
 }
 function numberFeedback(q,answer) {
   const p=parseNumbers(answer,q.cacNhanDinh.length), selected=p.valid?p.values:[];
@@ -139,7 +142,7 @@ function renderReview() {
 }
 function downloadResult() {
   const r=state.result;
-  const lines=['KẾT QUẢ ÔN TẬP SINH HỌC 10',`Họ tên: ${r.name}`,`Lớp: ${r.className}`,`Mã đề: ${r.code}`,`Điểm: ${formatScore(r.score)}/10`,`Thời gian: ${formatTime(r.elapsed)}`,`Nộp lúc: ${new Date(r.submittedAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})}`, 'Kết quả tự luyện trên thiết bị; chưa gửi tự động cho giáo viên.',''];
+  const lines=['KẾT QUẢ ÔN TẬP SINH HỌC 10',`Mã học sinh: ${r.studentId}`,`Số thứ tự: ${r.number}`,`Họ tên: ${r.name}`,`Lớp: ${r.className}`,`Mã đề: ${r.code}`,`Điểm: ${formatScore(r.score)}/10`,`Thời gian: ${formatTime(r.elapsed)}`,`Nộp lúc: ${new Date(r.submittedAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})}`,r.saveStatus==='saved'?'Đã lưu vào bảng của giáo viên.':'Chưa xác nhận đã lưu vào bảng của giáo viên.',`Mã lượt làm: ${r.submissionId}`,''];
   for(const row of r.rows){const q=row.q;lines.push(`Câu ${row.index+1} (${q.id}): ${row.correct?'Đúng':'Chưa đúng'} · ${formatScore(row.points)} điểm`);if(q.loai==='TLN'){const f=numberFeedback(q,row.answer);lines.push(`Em chọn: ${row.answer||'Chưa trả lời'}; Ý đúng: ${q.dapAn.join(', ')}; Ý sai: ${f.wrong.join(', ')}`);}}
   const url=URL.createObjectURL(new Blob(['\ufeff'+lines.join('\n')],{type:'text/plain;charset=utf-8'}));
   const a=document.createElement('a');a.href=url;a.download=`Ket-qua-Sinh10-${r.code}-${r.className}.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -147,11 +150,14 @@ function downloadResult() {
 document.addEventListener('DOMContentLoaded',()=>{
   if(!window.EXAMS||!CODES.every(code=>Array.isArray(window.EXAMS[code])&&window.EXAMS[code].length===34)){$('form-error').textContent='Chưa tải đủ dữ liệu đề. Em hãy tải lại trang khi có mạng.';$('start-form').querySelector('button').disabled=true;return;}
   setCode(new URLSearchParams(location.search).get('made'));
+  const previewId=()=>{const n=Number($('student-number').value);$('student-id-preview').textContent=$('student-class').value==='10A10'&&Number.isInteger(n)&&n>=1&&n<=99?`Mã học sinh: 10A10-${String(n).padStart(2,'0')}`:'Nhập đúng số thứ tự của em trong danh sách lớp (1–99).';};
+  $('student-number').addEventListener('input',previewId);$('student-class').addEventListener('change',previewId);
   document.querySelectorAll('input[name="exam"]').forEach(input=>input.addEventListener('change',()=>setCode(input.value,true)));
   $('start-form').addEventListener('submit',event=>{
     event.preventDefault();const name=$('student-name').value.trim().replace(/\s+/g,' '),className=$('student-class').value;
-    if(name.length<2||className!=='10A10'){$('form-error').textContent='Em nhập họ tên và chọn lớp 10A10 nhé.';return;}
-    state.name=name;state.className=className;$('form-error').textContent='';startExam();
+    const number=Number($('student-number').value);
+    if(name.length<2||name.length>60||!/^[\p{L}\p{M} .’'-]+$/u.test(name)||!/\p{L}/u.test(name)||className!=='10A10'||!Number.isInteger(number)||number<1||number>99){$('form-error').textContent='Em nhập họ tên, chọn lớp 10A10 và số thứ tự đúng theo danh sách lớp nhé.';return;}
+    state.name=name.normalize('NFC');state.className=className;state.number=number;state.studentId=`${className}-${String(number).padStart(2,'0')}`;$('form-error').textContent='';startExam();
   });
   $('question').addEventListener('click',event=>{
     if(!state.active)return;const button=event.target.closest('button');if(!button)return;
@@ -167,6 +173,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('submit').addEventListener('click',requestSubmit);$('cancel-submit').addEventListener('click',()=>$('submit-dialog').close());$('confirm-submit').addEventListener('click',()=>submitExam());
   $('retry').addEventListener('click',startExam);$('choose-exam').addEventListener('click',()=>showScreen('setup'));
   $('only-errors').addEventListener('change',renderReview);$('download').addEventListener('click',downloadResult);
+  window.addEventListener('submission-status',event=>{const {id,status,message}=event.detail;if(state.result?.submissionId!==id)return;state.result.saveStatus=status;$('save-status').textContent=message;$('resend').hidden=status!=='failed';});
+  $('resend').addEventListener('click',()=>window.Submissions.retryAll());
+  window.Submissions?.retryAll();
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateTimer();});
-  window.addEventListener('beforeunload',event=>{if(state.active){event.preventDefault();event.returnValue='';}});
+  window.addEventListener('beforeunload',event=>{if(state.active||window.Submissions?.hasPending()){event.preventDefault();event.returnValue='';}});
 });
