@@ -3,6 +3,7 @@ const SPREADSHEET_ID = '1UC1Ba2mDkUF_B1jiTFuOdQHhbSjgxEQftNSOw6PsECM';
 const EXAM_VERSION = '20261015';
 const SUMMARY = 'Kết quả lớp';
 const HISTORY = 'Lịch sử làm bài';
+const CLASSES = ['10A2', '10A10', '10A13', '10A14', '10A17'];
 
 function doGet() {
   return json_({ok:true, service:'Sinh học 10 – nhận kết quả', version:EXAM_VERSION});
@@ -21,7 +22,7 @@ function json_(value) {
 function validate_(p) {
   if (!p || p.version !== EXAM_VERSION || !['102','103'].includes(p.code)) throw Error('Phiên bản đề không khớp. Em tải lại trang nhé.');
   if (!/^[a-zA-Z0-9-]{20,80}$/.test(p.submissionId || '')) throw Error('Mã lượt làm không hợp lệ.');
-  if (p.className !== '10A10' || !Number.isInteger(p.number) || p.number < 1 || p.number > 99) throw Error('Số thứ tự hoặc lớp không hợp lệ.');
+  if (!CLASSES.includes(p.className) || !Number.isInteger(p.number) || p.number < 1 || p.number > 99) throw Error('Số thứ tự hoặc lớp không hợp lệ.');
   const studentId = p.className + '-' + String(p.number).padStart(2,'0');
   if (p.studentId !== studentId) throw Error('Mã học sinh không khớp số thứ tự lớp.');
   if (typeof p.name !== 'string') throw Error('Thiếu họ tên.');
@@ -71,7 +72,7 @@ function saveSubmission_(input) {
 function rebuildSummary_(sheet,rows) {
   const latest={};
   rows.forEach(r=>{if(!latest[r[3]]||new Date(r[0]).getTime()>=new Date(latest[r[3]][0]).getTime())latest[r[3]]=r;});
-  const values=Object.values(latest).sort((a,b)=>String(a[5]).localeCompare(String(b[5]))||a[2]-b[2]).map(r=>[r[2],r[3],r[4],r[5],r[7]]);
+  const values=Object.values(latest).sort((a,b)=>String(a[5]).localeCompare(String(b[5]),'vi',{numeric:true})||a[2]-b[2]).map(r=>[r[2],r[3],r[4],r[5],r[7]]);
   if(!values.length)return;
   if(values.length+1>sheet.getMaxRows())sheet.insertRowsAfter(sheet.getMaxRows(),values.length+1-sheet.getMaxRows());
   sheet.getRange(2,1,values.length,5).setValues(values);

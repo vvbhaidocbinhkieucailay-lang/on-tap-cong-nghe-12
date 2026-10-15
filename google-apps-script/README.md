@@ -1,4 +1,4 @@
-# Nhận kết quả Sinh học 10 – lớp 10A10
+# Nhận kết quả Sinh học 10 – khối 10
 
 ## Bảng của giáo viên
 
@@ -9,6 +9,7 @@ Bảng ở thư mục ChatGPT trong Drive. Giữ quyền truy cập riêng tư.
 - **Kết quả lớp:** Số thứ tự, Mã học sinh, Họ tên, Lớp, Điểm số. Mỗi mã học sinh có một dòng, lấy điểm của lượt được máy chủ nhận gần nhất, xếp theo lớp rồi số thứ tự.
 - **Lịch sử làm bài:** giữ từng lượt, mã đề, thời gian nhận theo giờ Việt Nam, thời gian làm và phiếu trả lời. Điểm được máy chủ chấm lại từ đáp án đã kiểm tra.
 - Mã học sinh được tạo từ lớp và số thứ tự: số 1 của lớp 10A10 là 10A10-01. Học sinh phải nhập đúng số thứ tự theo danh sách lớp. Chưa có danh sách tên để tự xác minh người nhập.
+- Các lớp được nhận bài: 10A2, 10A10, 10A13, 10A14, 10A17. Mã của số thứ tự 1 lớp 10A13 là 10A13-01. Bảng tổng hợp sắp theo số trong tên lớp (10A2 trước 10A10), rồi theo số thứ tự.
 
 ## Trạng thái ngày 15/10/2026
 

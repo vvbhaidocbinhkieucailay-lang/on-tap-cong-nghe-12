@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#176b53">
-  <title>Ôn tập Sinh học 10 · Lớp 10A10</title>
+  <title>Ôn tập Sinh học 10 · Khối 10</title>
   <link rel="stylesheet" href="styles.css?v=20261015b">
   <script defer src="exams.js?v=20261015"></script>
   <script defer src="submission.js?v=20261015b"></script>
-  <script defer src="app.js?v=20261015b"></script>
+  <script defer src="app.js?v=20261015c"></script>
 </head>
 <body>
-  <header class="site-header"><a href="./" aria-label="Trang chủ ôn tập"><span class="logo" aria-hidden="true">✳</span> Góc ôn tập <span class="subject">SINH HỌC 10</span></a><span class="class-tag">10A10</span></header>
+  <header class="site-header"><a href="./" aria-label="Trang chủ ôn tập"><span class="logo" aria-hidden="true">✳</span> Góc ôn tập <span class="subject">SINH HỌC 10</span></a><span class="class-tag">KHỐI 10</span></header>
   <main>
     <section id="setup">
       <div class="intro"><p class="eyebrow">GIỮA KỲ I · BÀI 1–6</p><h1>Hiểu từng ý.<br><span>Vững từng bài.</span></h1><p>Luyện đề, tự kiểm tra và xem giải thích sau khi hoàn thành.</p></div>
@@ -19,7 +19,7 @@
         <form id="start-form" class="card">
           <div class="card-title"><span class="step">01</span><h2>Sẵn sàng làm bài</h2></div>
           <label for="student-name">Họ và tên</label><input id="student-name" name="student" autocomplete="name" maxlength="60" required minlength="2" placeholder="Nhập họ và tên của em">
-          <label for="student-class">Lớp</label><select id="student-class" name="class" required><option value="">Chọn lớp</option><option value="10A10">10A10</option></select>
+          <label for="student-class">Lớp</label><select id="student-class" name="class" required><option value="">Chọn lớp</option><option value="10A2">10A2</option><option value="10A10">10A10</option><option value="10A13">10A13</option><option value="10A14">10A14</option><option value="10A17">10A17</option></select>
           <label for="student-number">Số thứ tự trong danh sách lớp</label><input id="student-number" type="number" min="1" max="99" step="1" required inputmode="numeric" placeholder="Ví dụ: 1" aria-describedby="student-id-preview">
           <p id="student-id-preview" class="small" aria-live="polite">Mã học sinh được tạo từ lớp và số thứ tự, ví dụ 10A10-01.</p>
           <fieldset class="exam-choice"><legend>Chọn mã đề</legend><label><input type="radio" name="exam" value="102" checked><span>Đề <b>102</b></span></label><label><input type="radio" name="exam" value="103"><span>Đề <b>103</b></span></label></fieldset>
@@ -47,7 +47,7 @@
     </section>
     <noscript><p class="card error">Em cần bật JavaScript trong trình duyệt để làm bài.</p></noscript>
   </main>
-  <footer>Sinh học 10 · Luyện tập cùng lớp 10A10 <span>Học để hiểu, làm để nhớ.</span></footer>
+  <footer>Sinh học 10 · Luyện tập cùng khối 10 <span>Học để hiểu, làm để nhớ.</span></footer>
   <dialog id="submit-dialog"><h2>Nộp bài ôn tập?</h2><p id="submit-message"></p><div class="result-actions"><button id="cancel-submit" class="secondary" type="button">Tiếp tục làm</button><button id="confirm-submit" class="primary" type="button">Nộp bài</button></div></dialog>
 </body>
 </html>

@@ -1,4 +1,4 @@
-# Cập nhật trang ôn tập Sinh học 10 — lớp 10A10
+# Cập nhật trang ôn tập Sinh học 10 — khối 10
 
 Bản cập nhật ngày 15/10/2026. Trang đã triển khai trên GitHub Pages; bản này bổ sung nhận kết quả vào Google Sheets.
 
@@ -18,7 +18,7 @@ Hai tệp `bank-a.js`, `bank-b.js` cũ có thể để nguyên để tham khảo
 - Đề 102: https://vvbhaidocbinhkieucailay-lang.github.io/on-tap-cong-nghe-12/sinh-10/?made=102
 - Đề 103: https://vvbhaidocbinhkieucailay-lang.github.io/on-tap-cong-nghe-12/sinh-10/?made=103
 
-Link giữ nguyên. Học sinh nhập họ tên, chọn lớp 10A10, nhập số thứ tự theo danh sách lớp rồi bắt đầu. Mã tự tạo: số 1 là 10A10-01. Chỉ có hai mã 102 và 103; mỗi mã cố định 34 câu, 60 phút, 10 điểm.
+Link giữ nguyên. Học sinh nhập họ tên, chọn lớp trong 10A2, 10A10, 10A13, 10A14, 10A17, nhập số thứ tự theo danh sách lớp rồi bắt đầu. Mã tự tạo theo lớp và số thứ tự, ví dụ 10A13-01. Chỉ có hai mã 102 và 103; mỗi mã cố định 34 câu, 60 phút, 10 điểm.
 
 ## Cách chấm
 

@@ -1,6 +1,7 @@
 'use strict';
 // Chỉ dùng để ôn tập. Dữ liệu và đáp án công khai trên trang tĩnh.
 const CODES = ['102', '103'];
+const CLASSES = ['10A2', '10A10', '10A13', '10A14', '10A17'];
 const LIMIT_SECONDS = 60 * 60;
 const $ = id => document.getElementById(id);
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -150,13 +151,13 @@ function downloadResult() {
 document.addEventListener('DOMContentLoaded',()=>{
   if(!window.EXAMS||!CODES.every(code=>Array.isArray(window.EXAMS[code])&&window.EXAMS[code].length===34)){$('form-error').textContent='Chưa tải đủ dữ liệu đề. Em hãy tải lại trang khi có mạng.';$('start-form').querySelector('button').disabled=true;return;}
   setCode(new URLSearchParams(location.search).get('made'));
-  const previewId=()=>{const n=Number($('student-number').value);$('student-id-preview').textContent=$('student-class').value==='10A10'&&Number.isInteger(n)&&n>=1&&n<=99?`Mã học sinh: 10A10-${String(n).padStart(2,'0')}`:'Nhập đúng số thứ tự của em trong danh sách lớp (1–99).';};
+  const previewId=()=>{const n=Number($('student-number').value),className=$('student-class').value;$('student-id-preview').textContent=CLASSES.includes(className)&&Number.isInteger(n)&&n>=1&&n<=99?`Mã học sinh: ${className}-${String(n).padStart(2,'0')}`:'Chọn lớp và nhập đúng số thứ tự của em trong danh sách lớp (1–99).';};
   $('student-number').addEventListener('input',previewId);$('student-class').addEventListener('change',previewId);
   document.querySelectorAll('input[name="exam"]').forEach(input=>input.addEventListener('change',()=>setCode(input.value,true)));
   $('start-form').addEventListener('submit',event=>{
     event.preventDefault();const name=$('student-name').value.trim().replace(/\s+/g,' '),className=$('student-class').value;
     const number=Number($('student-number').value);
-    if(name.length<2||name.length>60||!/^[\p{L}\p{M} .’'-]+$/u.test(name)||!/\p{L}/u.test(name)||className!=='10A10'||!Number.isInteger(number)||number<1||number>99){$('form-error').textContent='Em nhập họ tên, chọn lớp 10A10 và số thứ tự đúng theo danh sách lớp nhé.';return;}
+    if(name.length<2||name.length>60||!/^[\p{L}\p{M} .’'-]+$/u.test(name)||!/\p{L}/u.test(name)||!CLASSES.includes(className)||!Number.isInteger(number)||number<1||number>99){$('form-error').textContent='Em nhập họ tên, chọn lớp và số thứ tự đúng theo danh sách lớp nhé.';return;}
     state.name=name.normalize('NFC');state.className=className;state.number=number;state.studentId=`${className}-${String(number).padStart(2,'0')}`;$('form-error').textContent='';startExam();
   });
   $('question').addEventListener('click',event=>{

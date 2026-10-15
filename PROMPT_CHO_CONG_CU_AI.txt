@@ -1,7 +1,7 @@
 Hãy cập nhật dự án GitHub Pages vvbhaidocbinhkieucailay-lang/on-tap-cong-nghe-12 bằng năm tệp trong thư mục sinh-10 của gói mã nguồn kèm theo: index.html, styles.css, app.js, exams.js, submission.js. Chỉ cập nhật trang /sinh-10/, giữ trang Công nghệ 12 ở thư mục gốc.
 
 Yêu cầu đã triển khai trong gói:
-1. Học sinh nhập họ tên, chọn lớp 10A10 và số thứ tự trong lớp; tạo mã dạng 10A10-01. Chỉ có mã đề 102 và 103.
+1. Học sinh nhập họ tên, chọn một trong 5 lớp 10A2, 10A10, 10A13, 10A14, 10A17 và số thứ tự trong lớp; tạo mã theo đúng lớp, ví dụ 10A13-01. Chỉ có mã đề 102 và 103. Bộ nhận bài phải chấp nhận đủ 5 lớp và sắp xếp lớp theo số tự nhiên.
 2. Đọc ?made=102 hoặc ?made=103 ngay khi mở trang. Cho phép đổi mã trước khi làm; đổi mã không bị link cũ ép ngược lại.
 3. Mỗi đề cố định 24 TN, 2 đúng/sai (8 ý), 8 chọn ý bằng số, 60 phút, tổng 10 điểm.
 4. Câu trả lời ngắn có nhận định đánh số. Học sinh bấm nhiều ý hoặc nhập tập số. Nếu đáp án [1,4] thì 1,4 và 4,1 đều đúng; thiếu hoặc thừa ý đều sai; 14 không được hiểu thành 1,4.
