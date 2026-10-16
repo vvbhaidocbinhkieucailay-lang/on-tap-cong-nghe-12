@@ -3,7 +3,7 @@
 Website chính dùng hai mã đề 102 và 103. Các lớp: 10A2, 10A10, 10A13, 10A14, 10A17. Mã học sinh gồm lớp và số thứ tự (1–99), ví dụ 10A2-01.
 
 - Giao diện chính: `sinh-10/index.html`.
-- Giao diện thử nghiệm: `sinh-10-test/index.html`, dùng máy chủ và bảng thử riêng.
+- Đường dẫn cũ `sinh-10-test/` chỉ chuyển hướng sang website chính, không phục vụ đề thử.
 - Ngân hàng câu hỏi và đáp án được quản lý trong Google Sheet riêng tư. Apps Script cấp đề, chấm điểm và lưu bài; trình duyệt chỉ gửi câu trả lời.
 - Đề 102/103 đang ở chế độ ôn tập. Học sinh xem điểm và lời giải sau khi máy chủ xác nhận lưu.
 - TLN chọn các nhận định đúng: `1,4`, `4;1`, `1 4` tương đương; `14` và chuỗi sai định dạng không được tính như tập hợp 1 và 4.
