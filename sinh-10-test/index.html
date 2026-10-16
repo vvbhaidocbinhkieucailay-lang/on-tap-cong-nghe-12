@@ -278,6 +278,7 @@ function thoatHTML(s){
 }
 function hienManHinh(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $("luoi-wrap").style.display=id==="man-lam-bai"?"block":"none";
   $(id).classList.add("active"); window.scrollTo(0,0);
 }
 function giayThanhChu(s){
