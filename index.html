@@ -3,1210 +3,865 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ôn tập giữa kỳ I — Công nghệ 12 (Lâm nghiệp)</title>
+<title>Ôn tập giữa kỳ I — Công nghệ 12 · Lâm nghiệp</title>
 <!--
 ====================================================================
-HƯỚNG DẪN NHANH CHO GIÁO VIÊN
+ÔN TẬP CÔNG NGHỆ 12 — GIAO DIỆN (bản v2, kiến trúc an toàn)
 --------------------------------------------------------------------
-1. CẤU HÌNH (khung CONFIG): URL Apps Script, công tắc làm lại / hiện
-   đáp án / giới hạn giờ, danh sách lớp.
-2. MA TRẬN ĐỀ (khung MA_TRAN): cấu trúc đề theo ma trận GK1 —
-   Phần I: 24 câu trắc nghiệm; Phần II: 4 câu đúng/sai. Mỗi dòng ghi
-   rõ bài + mức độ + số câu cần bốc. Muốn đổi tỉ lệ, sửa số ở đây.
-3. NGÂN HÀNG CÂU HỎI (mảng NGAN_HANG_CAU_HOI): mỗi lượt làm bài, máy
-   bốc NGẪU NHIÊN câu hỏi theo đúng ma trận + xáo trộn thứ tự đáp án,
-   nên mỗi học sinh (mỗi lượt) gặp đề khác nhau.
-   Muốn THÊM câu: copy một khối { ... }, sửa nội dung, giữ đúng các
-   trường bai / mucDo / loai. Đáp án trắc nghiệm: dapAn: 0=A,1=B,2=C,3=D.
-4. LƯU Ý: đáp án nằm trong file nên học sinh biết xem mã nguồn có thể
-   thấy trước — trang này phù hợp để ÔN TẬP, không dùng cho kiểm tra
-   tính điểm chính thức.
-====================================================================
--->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+- Trang này CHỈ chứa giao diện. KHÔNG có ngân hàng câu hỏi, đáp án,
+  lời giải hay khóa bí mật trong mã nguồn.
+- Mọi câu hỏi do máy chủ (Google Apps Script) cấp theo từng lượt làm;
+  điểm do máy chủ chấm. Trình duyệt không tự tính điểm để hiển thị.
+- Giáo viên dán URL Web App vào APPS_SCRIPT_URL bên dưới trước khi dùng.
+==================================================================== -->
 <style>
-  :root{
-    --xanh-rung:#2E7D32; --xanh-rung-dam:#1B5E20; --xanh-nuoc:#0288D1;
-    --nen:#F4F8F4; --the:#FFFFFF; --chu:#1F2933; --chu-phu:#5B6B5B;
-    --vien:#DCE9DC; --vien-dam:#C9DCCB;
-    --dung-nen:#E8F5E9; --sai-nen:#FDECEA; --sai:#D32F2F; --chon-nen:#E3F2FD;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{font-size:16px}
-  body{font-family:'Nunito',system-ui,-apple-system,sans-serif;background:var(--nen);color:var(--chu);line-height:1.55}
-  .app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
-  main{flex:1;padding:16px 14px 90px}
-  .screen{display:none}
-  .screen.active{display:block;animation:fadeUp .25s ease}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-  .card{background:var(--the);border-radius:20px;padding:18px 16px;margin-bottom:14px;box-shadow:0 4px 14px rgba(27,94,32,.08)}
-  .section-title{font-size:1.1rem;font-weight:800;color:var(--xanh-rung-dam);margin:6px 2px 10px}
-  .muted{color:var(--chu-phu);font-size:.9rem}
-  /* --- Hero trang chủ --- */
-  .hero{background:linear-gradient(135deg,var(--xanh-rung-dam) 0%,var(--xanh-rung) 55%,var(--xanh-nuoc) 135%);color:#fff;border-radius:24px;padding:24px 20px;margin-bottom:14px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(27,94,32,.25)}
-  .hero-sub{font-size:.78rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.92}
-  .hero h1{font-size:1.45rem;font-weight:900;margin:6px 0 4px;line-height:1.35}
-  .hero p{font-size:.92rem;opacity:.94;font-weight:600}
-  .hero-mark{position:absolute;right:-14px;top:-14px;opacity:.16}
-  .exam-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-  .exam-stat{background:var(--the);border-radius:16px;padding:12px;text-align:center;box-shadow:0 4px 14px rgba(27,94,32,.08);border-top:4px solid var(--xanh-rung)}
-  .exam-stat.blue{border-top-color:var(--xanh-nuoc)}
-  .exam-stat b{display:block;font-size:1.3rem;font-weight:900;color:var(--xanh-rung-dam)}
-  .exam-stat.blue b{color:var(--xanh-nuoc)}
-  .exam-stat span{font-size:.8rem;color:var(--chu-phu);font-weight:700}
-  .cta-big{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:60px;border:none;border-radius:18px;font-family:inherit;font-size:1.12rem;font-weight:900;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--xanh-rung),var(--xanh-rung-dam));box-shadow:0 8px 20px rgba(46,125,50,.4);transition:transform .1s;margin:4px 0 14px}
-  .cta-big:active{transform:scale(.98)}
-  .steps{list-style:none;margin-top:4px}
-  .steps li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--vien);font-size:.95rem;font-weight:600;color:var(--chu-phu)}
-  .steps li:first-child{border-top:none}
-  .step-num{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:var(--dung-nen);color:var(--xanh-rung-dam);font-weight:900;display:flex;align-items:center;justify-content:center;font-size:.9rem}
-  /* --- Form --- */
-  .field{display:block;margin-bottom:14px}
-  .field span{display:block;font-weight:800;margin-bottom:6px;font-size:.95rem}
-  .field input,.field select{width:100%;height:54px;font-family:inherit;font-size:1rem;font-weight:600;border:2px solid var(--vien-dam);border-radius:14px;padding:0 14px;background:#fff;color:var(--chu)}
-  .field input:focus,.field select:focus{outline:none;border-color:var(--xanh-nuoc)}
-  .error-text{color:var(--sai);font-weight:700;font-size:.9rem;min-height:1.4em;margin-bottom:8px}
-  .btn{font-family:inherit;font-size:1rem;font-weight:800;border:none;border-radius:16px;min-height:52px;padding:0 18px;cursor:pointer;transition:transform .1s}
-  .btn:active{transform:scale(.97)}
-  .btn.primary{background:linear-gradient(135deg,var(--xanh-rung),var(--xanh-rung-dam));color:#fff;box-shadow:0 6px 14px rgba(46,125,50,.35)}
-  .btn.ghost{background:#fff;color:var(--xanh-rung);border:2px solid var(--vien-dam)}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .nav-row{display:flex;gap:10px;margin-top:4px}
-  .nav-row .btn{flex:1}
-  .nav-row.sticky{position:sticky;bottom:12px;margin-top:14px}
-  .info-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--vien);font-size:.95rem}
-  .info-row:first-of-type{border-top:none}
-  .info-row b{color:var(--xanh-rung-dam)}
-  /* --- Làm bài --- */
-  .quiz-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-  .quiz-phan{font-weight:900;color:var(--xanh-rung-dam);font-size:1rem}
-  .quiz-tools{margin-left:auto;display:flex;gap:8px;align-items:center}
-  .icon-btn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:12px;border:2px solid var(--vien-dam);background:#fff;font-family:inherit;font-size:.85rem;font-weight:800;color:var(--xanh-rung-dam);cursor:pointer}
-  .icon-btn.mo{background:var(--xanh-rung-dam);border-color:var(--xanh-rung-dam);color:#fff}
-  .timer-chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2px solid var(--vien-dam);border-radius:999px;padding:7px 14px;font-size:.95rem;font-weight:900;color:var(--chu)}
-  .timer-chip.het-gio{background:var(--sai-nen);border-color:var(--sai);color:var(--sai)}
-  .progress-bar{height:10px;background:var(--vien);border-radius:999px;overflow:hidden;margin-bottom:14px}
-  .progress-fill{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--xanh-rung),var(--xanh-nuoc));transition:width .3s}
-  .palette{display:none;background:var(--the);border-radius:18px;padding:14px;margin-bottom:14px;box-shadow:0 4px 14px rgba(27,94,32,.08)}
-  .palette.mo{display:block;animation:fadeUp .2s ease}
-  .palette-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:12px}
-  .p-cell{aspect-ratio:1;border-radius:10px;border:2px solid var(--vien-dam);background:#fff;font-family:inherit;font-weight:800;font-size:.9rem;color:var(--chu-phu);cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:44px}
-  .p-cell.lam{border-color:var(--xanh-nuoc);background:var(--chon-nen);color:var(--xanh-nuoc)}
-  .p-cell.hien-tai{border-color:var(--xanh-rung-dam);background:var(--xanh-rung-dam);color:#fff}
-  .palette-chu-thich{display:flex;gap:14px;font-size:.8rem;color:var(--chu-phu);font-weight:700;margin-bottom:12px;flex-wrap:wrap}
-  .dot{width:12px;height:12px;border-radius:4px;display:inline-block;margin-right:4px;vertical-align:baseline}
-  .q-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-  .q-chip{background:var(--dung-nen);color:var(--xanh-rung-dam);font-weight:800;font-size:.8rem;padding:4px 12px;border-radius:999px}
-  .q-phan2{background:var(--chon-nen);color:#01579B}
-  .q-mucdo{font-size:.8rem;font-weight:700;color:var(--chu-phu)}
-  .q-noidung{font-size:1.06rem;font-weight:700;margin-bottom:14px}
-  .opt{display:flex;align-items:center;gap:12px;width:100%;min-height:54px;text-align:left;font-family:inherit;font-size:1rem;font-weight:600;color:var(--chu);background:#fff;border:2px solid var(--vien-dam);border-radius:16px;padding:10px 14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
-  .opt:active{transform:scale(.985)}
-  .opt-letter{width:34px;height:34px;border-radius:50%;background:#EDF3ED;color:var(--xanh-rung);font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .opt.chon{border-color:var(--xanh-nuoc);background:var(--chon-nen)}
-  .opt.chon .opt-letter{background:var(--xanh-nuoc);color:#fff}
-  .opt.dung{border-color:var(--xanh-rung);background:var(--dung-nen)}
-  .opt.dung .opt-letter{background:var(--xanh-rung);color:#fff}
-  .opt.sai{border-color:var(--sai);background:var(--sai-nen)}
-  .opt.sai .opt-letter{background:var(--sai);color:#fff}
-  .opt.khoa{cursor:default}
-  .ds-y{background:#FAFCFA;border:2px solid var(--vien);border-radius:14px;padding:12px;margin-bottom:10px}
-  .ds-y.dung{border-color:var(--xanh-rung);background:var(--dung-nen)}
-  .ds-y.sai{border-color:var(--sai);background:var(--sai-nen)}
-  .ds-text{font-weight:600;margin-bottom:10px}
-  .ds-btns{display:flex;gap:10px}
-  .ds-btn{flex:1;min-height:48px;border-radius:12px;font-family:inherit;font-size:.95rem;font-weight:800;border:2px solid var(--vien-dam);background:#fff;color:var(--chu-phu);cursor:pointer}
-  .ds-btn.chon-dung{background:var(--xanh-rung);border-color:var(--xanh-rung);color:#fff}
-  .ds-btn.chon-sai{background:var(--sai);border-color:var(--sai);color:#fff}
-  /* --- Kết quả --- */
-  .result-hero{text-align:center}
-  .score-ring{width:150px;height:150px;margin:6px auto 10px;position:relative}
-  .score-ring svg{transform:rotate(-90deg)}
-  .score-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-  .score-num b{font-size:2.2rem;font-weight:900;color:var(--xanh-rung-dam)}
-  .score-num span{font-size:.85rem;color:var(--chu-phu);font-weight:700}
-  .ket-qua-dong{font-size:1rem;font-weight:700;margin-top:4px}
-  .diem-phan{display:flex;gap:10px;margin-top:12px}
-  .diem-phan div{flex:1;background:#F7FAF7;border-radius:12px;padding:8px}
-  .diem-phan b{display:block;font-size:1.1rem;color:var(--xanh-rung-dam)}
-  .diem-phan span{font-size:.78rem;color:var(--chu-phu);font-weight:700}
-  .nhan-xet{font-size:1.02rem;font-weight:700;color:var(--xanh-rung-dam);margin-bottom:8px}
-  .goi-y-on{font-size:.95rem;color:var(--chu);font-weight:600;background:#FFF8E1;border-radius:12px;padding:10px 12px;margin-top:10px}
-  .review{border-top:1px solid var(--vien);padding:12px 0}
-  .review:first-of-type{border-top:none}
-  .review-head{display:flex;gap:8px;align-items:flex-start;font-weight:800;margin-bottom:6px}
-  .badge{flex-shrink:0;font-size:.78rem;font-weight:800;padding:3px 10px;border-radius:999px}
-  .badge.dung{background:var(--dung-nen);color:var(--xanh-rung-dam)}
-  .badge.sai{background:var(--sai-nen);color:var(--sai)}
-  .review .dap-an{font-size:.92rem;margin:4px 0}
-  .review .giai-thich{font-size:.9rem;color:var(--chu-phu);background:#F7FAF7;border-radius:10px;padding:8px 10px;margin-top:6px}
-  .ds-review{font-size:.9rem;margin:2px 0 2px 4px}
-  .result-code-box{background:#F7FAF7;border:2px dashed var(--vien-dam);border-radius:14px;padding:12px;margin-top:12px;text-align:center}
-  .result-code-box b{font-size:1.3rem;letter-spacing:2px;color:var(--xanh-nuoc)}
-  .send-status{font-size:.95rem;font-weight:700;padding:10px 12px;border-radius:12px;margin-bottom:10px}
-  .send-status.dang{background:var(--chon-nen);color:var(--xanh-nuoc)}
-  .send-status.ok{background:var(--dung-nen);color:var(--xanh-rung-dam)}
-  .send-status.loi{background:var(--sai-nen);color:var(--sai)}
-  .app-footer{text-align:center;font-size:.8rem;color:var(--chu-phu);padding:14px;font-weight:600}
+:root{
+  --xanh:#1B7A3D; --xanh-nhat:#E8F5E9; --nen:#F4F7F4; --the:#FFFFFF;
+  --chu:#222; --chu-phu:#666; --vien:#E0E0E0; --do:#C62828; --cam:#E65100;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  background:var(--nen); color:var(--chu); font-size:17px; line-height:1.55}
+.app{max-width:640px; margin:0 auto; min-height:100vh; background:var(--nen)}
+.screen{display:none; padding:14px 14px 90px}
+.screen.active{display:block}
+.hero{background:linear-gradient(135deg,#1B7A3D,#2E9E52); color:#fff; border-radius:18px;
+  padding:26px 20px; text-align:center; margin-bottom:14px}
+.hero h1{margin:6px 0 8px; font-size:1.5rem}
+.hero p{margin:0; opacity:.95; font-size:.95rem}
+.hero-sub{font-size:.85rem; opacity:.9; letter-spacing:.5px}
+.card{background:var(--the); border-radius:16px; padding:16px; margin-bottom:12px;
+  box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.section-title{font-size:1.05rem; margin:0 0 10px; color:var(--xanh)}
+.field{display:block; margin-bottom:12px}
+.field>span{display:block; font-weight:600; margin-bottom:6px; font-size:.95rem}
+.field input,.field select{width:100%; font-size:1.05rem; padding:13px 12px;
+  border:2px solid var(--vien); border-radius:12px; background:#fff; color:var(--chu)}
+.field input:focus,.field select:focus{outline:none; border-color:var(--xanh)}
+.hang2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.ma-hs{background:var(--xanh-nhat); border:2px dashed var(--xanh); border-radius:12px;
+  padding:12px; text-align:center; font-weight:700; font-size:1.2rem; color:var(--xanh);
+  margin:4px 0 12px}
+.cta-big{display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  background:var(--xanh); color:#fff; border:none; border-radius:14px;
+  font-size:1.15rem; font-weight:700; padding:16px; cursor:pointer; min-height:56px}
+.cta-big:disabled{opacity:.5}
+.btn{display:inline-flex; align-items:center; justify-content:center; min-height:48px;
+  padding:10px 18px; border-radius:12px; border:2px solid var(--vien); background:#fff;
+  font-size:1rem; font-weight:600; cursor:pointer; color:var(--chu)}
+.btn.primary{background:var(--xanh); border-color:var(--xanh); color:#fff}
+.btn.danger{background:var(--do); border-color:var(--do); color:#fff}
+.muted{color:var(--chu-phu); font-size:.88rem}
+.error-text{color:var(--do); font-weight:600; min-height:1.4em; font-size:.95rem}
+.privacy{background:#FFF8E1; border:1px solid #FFE0B2; border-radius:12px;
+  padding:10px 12px; font-size:.88rem; color:#6D4C00; margin-top:8px}
+/* thanh làm bài */
+.topbar{position:sticky; top:0; z-index:20; background:var(--the);
+  border-bottom:1px solid var(--vien); padding:10px 14px; display:flex;
+  align-items:center; justify-content:space-between; gap:8px}
+.dong-ho{font-weight:800; font-size:1.25rem; color:var(--xanh);
+  font-variant-numeric:tabular-nums}
+.dong-ho.sap-het{color:var(--do); animation:nhapnhay 1s infinite}
+@keyframes nhapnhay{50%{opacity:.5}}
+.tien-do{height:8px; background:var(--vien); border-radius:99px; overflow:hidden; margin:10px 0 2px}
+.tien-do>i{display:block; height:100%; background:var(--xanh); width:0; transition:width .2s}
+.q-meta{display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap}
+.q-chip{background:var(--xanh); color:#fff; font-weight:700; border-radius:99px;
+  padding:4px 12px; font-size:.9rem}
+.q-mucdo{font-size:.85rem; color:var(--chu-phu)}
+.q-noidung{font-size:1.08rem; font-weight:500; margin-bottom:12px}
+.q-hinh{max-width:100%; border-radius:12px; margin:0 0 12px; border:1px solid var(--vien)}
+.opt{display:flex; gap:10px; align-items:flex-start; width:100%; text-align:left;
+  background:#fff; border:2px solid var(--vien); border-radius:12px; padding:13px 12px;
+  font-size:1.02rem; margin-bottom:10px; cursor:pointer; min-height:52px; color:var(--chu)}
+.opt.chon{border-color:var(--xanh); background:var(--xanh-nhat)}
+.opt-letter{flex:0 0 30px; height:30px; border-radius:50%; background:#eee;
+  display:flex; align-items:center; justify-content:center; font-weight:700}
+.opt.chon .opt-letter{background:var(--xanh); color:#fff}
+.ds-y{background:#fff; border:2px solid var(--vien); border-radius:12px;
+  padding:12px; margin-bottom:10px}
+.ds-text{margin-bottom:10px}
+.ds-btns{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.ds-btn{min-height:52px; border-radius:12px; border:2px solid var(--vien);
+  background:#fff; font-size:1.05rem; font-weight:700; cursor:pointer}
+.ds-btn.chon-dung{border-color:var(--xanh); background:var(--xanh-nhat); color:var(--xanh)}
+.ds-btn.chon-sai{border-color:var(--do); background:#FFEBEE; color:var(--do)}
+.tln-input{width:100%; font-size:1.1rem; padding:14px 12px; border:2px solid var(--vien);
+  border-radius:12px; min-height:56px}
+.tln-input:focus{outline:none; border-color:var(--xanh)}
+.tl-hint{font-size:.85rem; color:var(--chu-phu); margin-top:6px}
+.ds-nhan-dinh{margin-bottom:12px}
+.nd-item{display:flex; gap:10px; align-items:flex-start; background:#fff;
+  border:1px solid var(--vien); border-radius:10px; padding:10px 12px; margin-bottom:8px}
+.nd-so{flex:0 0 28px; height:28px; border-radius:50%; background:var(--xanh-nhat);
+  color:var(--xanh); font-weight:800; display:flex; align-items:center;
+  justify-content:center; font-size:.95rem}
+.nav-row{display:flex; gap:10px; margin-top:12px}
+.nav-row .btn{flex:1}
+.luoi-wrap{position:fixed; bottom:0; left:0; right:0; z-index:30;
+  background:var(--the); border-top:1px solid var(--vien); padding:8px 12px calc(10px + env(safe-area-inset-bottom))}
+.luoi-head{display:flex; justify-content:space-between; align-items:center; gap:8px}
+.luoi-grid{display:none; grid-template-columns:repeat(6,1fr); gap:8px; margin-top:8px;
+  max-height:180px; overflow-y:auto}
+.luoi-grid.mo{display:grid}
+.o-luoi{min-height:48px; border-radius:10px; border:2px solid var(--vien); background:#fff;
+  font-weight:700; font-size:1rem; cursor:pointer}
+.o-luoi.da-lam{background:var(--xanh-nhat); border-color:var(--xanh); color:var(--xanh)}
+.o-luoi.hien-tai{outline:3px solid var(--cam)}
+/* kết quả */
+.ket-qua-card{text-align:center; padding:26px 16px}
+.trang-thai{font-size:1.05rem; font-weight:600; margin:10px 0}
+.trang-thai.ok{color:var(--xanh)}
+.trang-thai.cho{color:var(--cam)}
+.diem-lon{font-size:3rem; font-weight:800; color:var(--xanh)}
+.review{background:#fff; border-radius:12px; padding:12px; margin-bottom:10px;
+  border:1px solid var(--vien)}
+.badge{display:inline-block; border-radius:99px; padding:2px 10px; font-size:.82rem;
+  font-weight:700; margin-right:8px}
+.badge.dung{background:var(--xanh-nhat); color:var(--xanh)}
+.badge.sai{background:#FFEBEE; color:var(--do)}
+.badge.cho{background:#FFF3E0; color:var(--cam)}
+.giai-thich{background:#F9FBE7; border-radius:8px; padding:8px 10px; margin-top:8px; font-size:.95rem}
+.app-footer{text-align:center; font-size:.8rem; color:var(--chu-phu); padding:14px}
+.made-tag{display:inline-block; background:#E3F2FD; color:#1565C0; font-weight:700;
+  border-radius:99px; padding:4px 14px; margin-bottom:8px}
+.tln-canh-bao{color:var(--do); font-size:.9rem; margin-top:6px; min-height:1em}
+dialog{border:none; border-radius:16px; padding:20px; max-width:90vw}
+dialog::backdrop{background:rgba(0,0,0,.4)}
 </style>
 </head>
 <body>
 <div class="app">
-  <main>
-    <!-- ============ MÀN HÌNH 1: TRANG CHỦ ============ -->
-    <section id="man-hinh-chinh" class="screen active">
-      <div class="hero">
-        <svg class="hero-mark" width="120" height="120" viewBox="0 0 40 40" fill="none">
-          <path d="M20 4C20 4 10 14 10 22a10 10 0 0 0 20 0C30 14 20 4 20 4Z" fill="#FFFFFF"/>
-          <path d="M4 34c3-2.5 6-2.5 9 0 3 2.5 6 2.5 9 0 3-2.5 6-2.5 9 0" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
-        </svg>
-        <div class="hero-sub">Công nghệ 12 · Lâm nghiệp</div>
-        <h1>Ôn tập kiểm tra<br>giữa kỳ I</h1>
-        <p>Đề bám sát ma trận của trường — mỗi lượt làm là một đề khác nhau.</p>
-      </div>
+<main>
+  <!-- MÀN HÌNH 1: TRANG CHỦ -->
+  <section id="man-chinh" class="screen active">
+    <div class="hero">
+      <div class="hero-sub">Công nghệ 12 · Lâm nghiệp · Giữa kỳ I</div>
+      <h1>Ôn tập kiểm tra<br>giữa kỳ I</h1>
+      <p id="hero-made">Ôn tập Lâm nghiệp — mỗi lượt một đề theo ma trận.</p>
+    </div>
+    <div class="card">
+      <h2 class="section-title">Cách làm bài</h2>
+      <ol style="margin:0; padding-left:20px">
+        <li>Nhập <b>họ tên</b>, chọn <b>lớp</b> và <b>số thứ tự</b> của em.</li>
+        <li>Bấm <b>Bắt đầu</b> để nhận đề từ máy chủ (45 phút).</li>
+        <li>Làm bài xong bấm <b>Nộp bài</b>. Đợi máy chủ xác nhận đã lưu.</li>
+        <li>Chế độ ôn tập: xem điểm và giải thích sau khi nộp. Chế độ kiểm tra: đợi giáo viên công bố.</li>
+      </ol>
+    </div>
+    <div class="card" id="bai-cu" hidden><p>Thiết bị còn kết quả chờ gửi của phiên bản cũ. Em tải bản sao để gửi giáo viên.</p><button class="btn" id="tai-bai-cu">Tải kết quả cũ</button></div>
+    <button class="cta-big" id="nut-bat-dau-chinh">Bắt đầu</button>
+    <div class="card" id="card-tiep-tuc" style="display:none; margin-top:12px">
+      <h2 class="section-title">Lượt làm dang dở</h2>
+      <p class="muted" id="tiep-tuc-mo-ta"></p>
+      <button class="btn primary" id="nut-tiep-tuc" style="width:100%">Tiếp tục làm bài</button>
+      <button class="btn" id="nut-bo-luot" style="width:100%; margin-top:8px">Bỏ lượt này</button>
+    </div>
+    <div class="card" id="card-gui-lai" style="display:none; margin-top:12px">
+      <h2 class="section-title">Bài chờ gửi</h2>
+      <p class="muted" id="gui-lai-mo-ta"></p>
+      <button class="btn primary" id="nut-gui-lai-home" style="width:100%">Gửi lại bài</button>
+    </div>
+    <div class="card" id="card-bien-nhan" style="display:none; margin-top:12px">
+      <h2 class="section-title">Kết quả của em</h2>
+      <div id="ds-bien-nhan"></div>
+      <p class="muted">Mở lại kết quả theo đúng lượt làm của em.</p>
+    </div>
+  </section>
 
-      <div class="exam-grid">
-        <div class="exam-stat"><b>24 câu</b><span>Trắc nghiệm · 6,0 điểm</span></div>
-        <div class="exam-stat blue"><b>4 câu</b><span>Đúng/Sai · 4,0 điểm</span></div>
-        <div class="exam-stat"><b>45 phút</b><span>Thời gian làm bài</span></div>
-        <div class="exam-stat blue"><b>10 điểm</b><span>Thang điểm</span></div>
-      </div>
-
-      <button class="cta-big" id="nut-bat-dau">
-        Bắt đầu
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-
-      <div class="card">
-        <h2 class="section-title">Cách làm bài</h2>
-        <ul class="steps">
-          <li><span class="step-num">1</span><span>Nhập <b>họ tên</b> và chọn <b>lớp</b> của em.</span></li>
-          <li><span class="step-num">2</span><span>Làm <b>Phần I</b> (24 câu trắc nghiệm), rồi <b>Phần II</b> (4 câu đúng/sai, mỗi câu 4 ý).</span></li>
-          <li><span class="step-num">3</span><span>Dùng <b>lưới câu hỏi</b> để nhảy tới câu chưa làm. Bấm <b>Nộp bài</b> trước khi hết 45 phút.</span></li>
-          <li><span class="step-num">4</span><span>Xem điểm, đáp án và lời nhận xét ngay sau khi nộp.</span></li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- ============ MÀN HÌNH 2: THÔNG TIN + SẴN SÀNG ============ -->
-    <section id="man-hinh-thong-tin" class="screen">
-      <div class="card">
-        <h2 class="section-title">Thông tin học sinh</h2>
-        <label class="field">
-          <span>Họ và tên</span>
-          <input id="o-ho-ten" type="text" placeholder="VD: Nguyễn Văn An" autocomplete="name" maxlength="60">
+  <!-- MÀN HÌNH 2: THÔNG TIN -->
+  <section id="man-thong-tin" class="screen">
+    <div class="card">
+      <div class="made-tag" id="tag-made">Mã đề</div>
+      <h2 class="section-title">Thông tin học sinh</h2>
+      <label class="field"><span>Họ và tên</span>
+        <input id="o-ho-ten" type="text" placeholder="VD: Nguyễn Văn An" autocomplete="name" maxlength="80">
+      </label>
+      <div class="hang2">
+        <label class="field"><span>Lớp</span>
+          <select id="o-lop">
+            <option value="12A7">12A7</option>
+            <option value="12A8">12A8</option>
+          </select>
         </label>
-        <label class="field">
-          <span>Lớp</span>
-          <select id="o-lop"></select>
+        <label class="field"><span>Số thứ tự (1–99)</span>
+          <input id="o-stt" type="number" min="1" max="99" inputmode="numeric" placeholder="VD: 7">
         </label>
-        <p class="error-text" id="loi-thong-tin"></p>
       </div>
+      <div class="ma-hs" id="xem-ma-hs">Mã học sinh: —</div>
+      <p class="error-text" id="loi-thong-tin"></p>
+      <div class="privacy">Thông tin chỉ dùng để theo dõi kết quả học tập của em, không chia sẻ cho bên thứ ba.</div>
+    </div>
+    <button class="cta-big" id="nut-vao-lam-bai">Bắt đầu làm bài</button>
+    <div class="nav-row"><button class="btn" id="nut-tro-ve">‹ Trang chủ</button></div>
+  </section>
 
-      <div class="card">
-        <h2 class="section-title">Cấu trúc đề thi</h2>
-        <div class="info-row"><span>Phần I — Trắc nghiệm nhiều lựa chọn</span><b>24 câu × 0,25đ</b></div>
-        <div class="info-row"><span>Phần II — Trắc nghiệm đúng/sai</span><b>4 câu × 4 ý × 0,25đ</b></div>
-        <div class="info-row"><span>Phạm vi</span><b>Bài 1 → Bài 7</b></div>
-        <div class="info-row"><span>Thời gian làm bài</span><b>45 phút</b></div>
-        <div class="info-row"><span>Tổng điểm</span><b>10 điểm</b></div>
-        <p class="muted" style="margin-top:10px">Mỗi lượt làm, máy bốc ngẫu nhiên câu hỏi theo đúng ma trận nên đề của mỗi bạn khác nhau. Cố gắng làm hết sức mình nhé!</p>
-      </div>
-
-      <button class="cta-big" id="nut-vao-lam-bai">
-        Bắt đầu làm bài
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <div class="nav-row" style="margin-bottom:14px">
-        <button class="btn ghost" id="nut-tro-ve-chinh">‹ Trang chủ</button>
-      </div>
-    </section>
-
-    <!-- ============ MÀN HÌNH 3: LÀM BÀI ============ -->
-    <section id="man-hinh-lam-bai" class="screen">
-      <div class="quiz-head">
-        <span class="quiz-phan" id="ten-phan">Phần I</span>
-        <div class="quiz-tools">
-          <button class="icon-btn" id="nut-luoi-cau">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.8"/></svg>
-            Câu hỏi
-          </button>
-          <span class="timer-chip" id="dong-ho">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="M8 4.5V8l2.5 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            <span id="dong-ho-so">45:00</span>
-          </span>
-        </div>
-      </div>
-      <div class="quiz-head" style="margin-top:-4px">
-        <span class="muted" id="tien-do-chu" style="font-weight:800">Câu 1 / 28</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" id="thanh-tien-do"></div></div>
-
-      <div class="palette" id="luoi-cau-hoi">
-        <div class="palette-grid" id="luoi-o-cau"></div>
-        <div class="palette-chu-thich">
-          <span><span class="dot" style="background:#E3F2FD;border:2px solid #0288D1"></span>Đã làm</span>
-          <span><span class="dot" style="background:#1B5E20"></span>Đang làm</span>
-          <span><span class="dot" style="background:#fff;border:2px solid #C9DCCB"></span>Chưa làm</span>
-        </div>
-        <button class="btn primary" id="nut-nop-tu-luoi" style="width:100%">Nộp bài</button>
-      </div>
-
+  <!-- MÀN HÌNH 3: LÀM BÀI -->
+  <section id="man-lam-bai" class="screen" style="padding-top:0">
+    <div class="topbar">
+      <div><div class="muted" id="lam-bai-made">Mã đề</div>
+      <div style="font-weight:700" id="lam-bai-hs"></div></div>
+      <div class="dong-ho" id="dong-ho">60:00</div>
+    </div>
+    <div style="padding:0 14px">
+      <div class="tien-do"><i id="thanh-tien-do"></i></div>
+      <div class="muted" id="tien-do-chu" style="margin-bottom:8px"></div>
       <div class="card" id="the-cau-hoi"></div>
-      <div class="nav-row sticky">
-        <button class="btn ghost" id="nut-quay-lai">‹ Quay lại</button>
+      <div class="nav-row">
+        <button class="btn" id="nut-quay-lai">‹ Câu trước</button>
         <button class="btn primary" id="nut-tiep-theo">Câu tiếp ›</button>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- ============ MÀN HÌNH 4: KẾT QUẢ ============ -->
-    <section id="man-hinh-ket-qua" class="screen">
-      <div class="card result-hero">
-        <div class="score-ring">
-          <svg width="150" height="150" viewBox="0 0 150 150">
-            <circle cx="75" cy="75" r="64" fill="none" stroke="#DCE9DC" stroke-width="14"/>
-            <circle id="vong-diem" cx="75" cy="75" r="64" fill="none" stroke="#2E7D32" stroke-width="14"
-                    stroke-linecap="round" stroke-dasharray="402.1" stroke-dashoffset="402.1"/>
-          </svg>
-          <div class="score-num"><b id="diem-so">0</b><span>/ 10 điểm</span></div>
-        </div>
-        <div id="tom-tat-ket-qua"></div>
-        <div class="diem-phan">
-          <div><b id="diem-phan-1">0</b><span>Phần I / 6,0đ</span></div>
-          <div><b id="diem-phan-2">0</b><span>Phần II / 4,0đ</span></div>
-        </div>
+  <!-- MÀN HÌNH 4: KẾT QUẢ -->
+  <section id="man-ket-qua" class="screen">
+    <div class="card ket-qua-card">
+      <div class="made-tag" id="kq-made">Mã đề</div>
+      <h2 class="section-title" style="text-align:center">Kết quả nộp bài</h2>
+      <div class="trang-thai cho" id="kq-trang-thai">Đang gửi bài…</div>
+      <div id="kq-diem-wrap" style="display:none">
+        <div class="diem-lon" id="kq-diem"></div>
+        <div class="muted" id="kq-diem-chu"></div>
       </div>
-
-      <div class="card">
-        <div class="nhan-xet" id="loi-nhan-xet"></div>
-        <div class="goi-y-on" id="goi-y-on-lai" style="display:none"></div>
-      </div>
-
-      <div class="card">
-        <h2 class="section-title">Gửi kết quả cho giáo viên</h2>
-        <div id="trang-thai-gui"></div>
-        <button class="btn primary" id="nut-gui-lai" style="display:none;width:100%">Gửi lại kết quả</button>
-        <div class="result-code-box">
-          Mã kết quả của em: <b id="ma-ket-qua">—</b>
-          <p class="muted" style="margin-top:6px">Nếu mạng yếu, em hãy <b>chụp màn hình</b> cả điểm và mã này để nộp dự phòng nhé.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2 class="section-title">Chi tiết từng câu</h2>
-        <div id="chi-tiet-cau"></div>
-      </div>
-
-      <div class="nav-row">
-        <button class="btn ghost" id="nut-ve-trang-chu">‹ Trang chủ</button>
-        <button class="btn primary" id="nut-lam-lai">Làm đề mới ›</button>
-      </div>
-    </section>
-  </main>
-
-  <footer class="app-footer">Ôn tập giữa kỳ I · Công nghệ 12 (Lâm nghiệp) · Chúc em làm bài tốt!</footer>
+      <p class="muted" id="kq-mo-ta"></p>
+      <button class="btn primary" id="nut-gui-lai" style="display:none; width:100%">Gửi lại</button>
+      <button class="btn" id="nut-xem-lai" style="display:none; width:100%; margin-top:8px">Xem lại bài làm</button>
+      <button class="btn" id="nut-tai-ban-sao" style="display:none; width:100%; margin-top:8px">Tải bản sao phiếu trả lời</button>
+    </div>
+    <div id="kq-chi-tiet"></div>
+    <button class="cta-big" id="nut-ve-trang-chu" style="margin-top:12px">Về trang chủ</button>
+  </section>
+</main>
+<footer class="app-footer">Ôn tập giữa kỳ I · Công nghệ 12 · Lâm nghiệp</footer>
 </div>
+
+<!-- lưới câu hỏi -->
+<div class="luoi-wrap" id="luoi-wrap" style="display:none">
+  <div class="luoi-head">
+    <button class="btn" id="nut-luoi-cau">Lưới câu hỏi</button>
+    <button class="btn danger" id="nut-nop-bai">Nộp bài</button>
+  </div>
+  <div class="luoi-grid" id="luoi-cau-hoi"></div>
+</div>
+
+<dialog id="hop-xac-nhan">
+  <h3 style="margin-top:0">Nộp bài?</h3>
+  <p class="muted" id="hop-xac-nhan-noi-dung"></p>
+  <div class="nav-row">
+    <button class="btn" id="hop-huy">Làm tiếp</button>
+    <button class="btn danger" id="hop-dong-y">Nộp bài</button>
+  </div>
+</dialog>
+
 <script>
-/* =====================================================================
-   PHẦN 1: CẤU HÌNH
-   ===================================================================== */
-const CONFIG = {
-  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzx8t5mXMQqn8j9jK4miI95_E6wTxayOEJd0gi6-7jBwTxO6oPAP3sb5EsnL_mDIzKQ/exec",
-  CHO_PHEP_LAM_LAI: true,   // true = được làm đề mới nhiều lần
-  HIEN_DAP_AN: "sau_nop",   // "sau_nop" | "ngay"
-  GIOI_HAN_PHUT: 45,        // theo ma trận GK1: 45 phút (0 = không giới hạn)
-  DANH_SACH_LOP: ["12A7", "12A8"],
-};
+'use strict';
+/* ================= CẤU HÌNH ================= */
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZ-2V3cdVA6kBF5afu52Y30qSqR_ONKDeaiRYeDSWVnbaqJo73CRLdYQS8Nsp4xkaV/exec"; // <-- giáo viên dán URL Web App vào đây
+const KHO_CN = "cn12v2:"+location.origin+location.pathname.replace(/index\.html$/, "")+":";
+const LOP_HOP_LE = ["12A7","12A8"];
 
-/* =====================================================================
-   PHẦN 2: MA TRẬN ĐỀ (theo ma trận kiểm tra giữa kỳ I của trường)
-   Mỗi lượt làm bài, máy bốc ngẫu nhiên đúng số câu của từng dòng.
-   - Phần I: 24 câu trắc nghiệm, mỗi câu đúng = 0,25 điểm (tổng 6,0đ)
-   - Phần II: 4 câu đúng/sai, mỗi ý đúng = 0,25 điểm (tổng 4,0đ)
-   Muốn đổi tỉ lệ: sửa con số soCau ở từng dòng cho đúng ý mình.
-   ===================================================================== */
-const MA_TRAN = {
-  phan1: [ // trắc nghiệm nhiều lựa chọn
-    { bai: "Bài 1", mucDo: "biet",    soCau: 4 },
-    { bai: "Bài 1", mucDo: "hieu",    soCau: 1 },
-    { bai: "Bài 2", mucDo: "biet",    soCau: 2 },
-    { bai: "Bài 2", mucDo: "hieu",    soCau: 2 },
-    { bai: "Bài 3", mucDo: "biet",    soCau: 2 },
-    { bai: "Bài 3", mucDo: "hieu",    soCau: 2 },
-    { bai: "Bài 4", mucDo: "vandung", soCau: 1 },
-    { bai: "Bài 5", mucDo: "biet",    soCau: 1 },
-    { bai: "Bài 5", mucDo: "hieu",    soCau: 1 },
-    { bai: "Bài 6", mucDo: "biet",    soCau: 2 },
-    { bai: "Bài 6", mucDo: "hieu",    soCau: 1 },
-    { bai: "Bài 6", mucDo: "vandung", soCau: 2 },
-    { bai: "Bài 7", mucDo: "biet",    soCau: 1 },
-    { bai: "Bài 7", mucDo: "hieu",    soCau: 1 },
-    { bai: "Bài 7", mucDo: "vandung", soCau: 1 },
-  ],
-  phan2: [ // trắc nghiệm đúng/sai (mỗi câu 4 ý: a=Biết, b=Hiểu, c=VD, d=VD)
-    { bai: "Bài 2", soCau: 1 },
-    { bai: "Bài 4", soCau: 1 },
-    { bai: "Bài 5", soCau: 1 },
-    { bai: "Bài 6", soCau: 1 },
-  ]
-};
-
-/* =====================================================================
-   PHẦN 3: NGÂN HÀNG CÂU HỎI (viết theo chủ đề ngân hàng của cô/chú)
-   Mỗi ô trong ma trận cần ít nhất bấy nhiêu câu; ở đây có GẤP ĐÔI để
-   mỗi lượt bốc đề khác nhau. Thêm câu mới: copy một khối { ... } rồi
-   sửa nội dung, giữ đúng các trường bai / mucDo / loai.
-   - loai "tracnghiem": dapAn: 0=A, 1=B, 2=C, 3=D
-   - loai "dungsai": y là 4 ý, mỗi ý có dung: true/false
-   ===================================================================== */
-const NGAN_HANG_CAU_HOI = [
-
-// ================= BÀI 1: VAI TRÒ VÀ TRIỂN VỌNG CỦA LÂM NGHIỆP =================
-{ id:"B1B-01", bai:"Bài 1", chuDe:"Rừng phòng hộ", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Vai trò chủ yếu của rừng phòng hộ đầu nguồn là gì?",
-  luaChon:["Chắn sóng, chắn gió, chống cát bay ở ven biển",
-           "Điều hòa dòng chảy, giữ đất, giữ nước, chống xói mòn",
-           "Cung cấp gỗ nguyên liệu cho nhà máy giấy",
-           "Làm tăng nhiệt độ không khí ở vùng đầu nguồn"],
-  dapAn:1,
-  giaiThich:"Rừng phòng hộ đầu nguồn nằm ở khu vực đầu nguồn sông, suối nên nhiệm vụ chính là điều hòa dòng chảy, giữ đất, giữ nước và chống xói mòn, rửa trôi." },
-{ id:"B1B-02", bai:"Bài 1", chuDe:"Rừng phòng hộ", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Vai trò chủ yếu của rừng phòng hộ ven biển là gì?",
-  luaChon:["Điều hòa dòng chảy các sông lớn",
-           "Cung cấp gỗ cho xây dựng",
-           "Chắn sóng, chắn gió, chống cát bay, ngăn xâm nhập mặn",
-           "Bảo tồn các loài cây lấy gỗ quý"],
-  dapAn:2,
-  giaiThich:"Rừng phòng hộ ven biển (rừng ngập mặn, phi lao...) có vai trò chắn sóng, chắn gió, chống cát bay và ngăn sự xâm nhập của nước mặn, bảo vệ đê điều." },
-{ id:"B1B-03", bai:"Bài 1", chuDe:"Lâm sản", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Sản phẩm nào sau đây là lâm sản ngoài gỗ?",
-  luaChon:["Gỗ xẻ","Ván ép","Dăm gỗ","Mật ong rừng"],
-  dapAn:3,
-  giaiThich:"Lâm sản ngoài gỗ là sản phẩm lấy từ rừng nhưng không phải gỗ, ví dụ: mật ong rừng, dược liệu, mây, tre, nứa, nhựa cây." },
-{ id:"B1B-04", bai:"Bài 1", chuDe:"Đặc trưng sản xuất", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Đặc trưng nào sau đây đúng về sản xuất lâm nghiệp?",
-  luaChon:["Chu kì kinh doanh ngắn, quay vòng vốn nhanh",
-           "Đối tượng là máy móc, thiết bị hiện đại",
-           "Chu kì kinh doanh dài, tốc độ quay vòng vốn chậm",
-           "Địa bàn tập trung, thuận lợi về giao thông"],
-  dapAn:2,
-  giaiThich:"Đối tượng của lâm nghiệp là cơ thể sống (cây rừng) có chu kì sinh trưởng dài nên đây là ngành sản xuất có chu kì kinh doanh dài, quay vòng vốn chậm." },
-{ id:"B1B-05", bai:"Bài 1", chuDe:"Vai trò với đời sống", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Nội dung nào sau đây KHÔNG phải là vai trò của lâm nghiệp đối với đời sống con người?",
-  luaChon:["Cung cấp gỗ cho xây dựng và công nghiệp chế biến",
-           "Cung cấp dược liệu quý phục vụ chữa bệnh",
-           "Tạo việc làm, ổn định đời sống đồng bào miền núi",
-           "Cung cấp thịt, trứng, sữa cho tiêu dùng"],
-  dapAn:3,
-  giaiThich:"Thịt, trứng, sữa là sản phẩm của chăn nuôi, không phải của lâm nghiệp. Lâm nghiệp cung cấp gỗ, lâm sản ngoài gỗ, dược liệu và tạo việc làm." },
-{ id:"B1B-06", bai:"Bài 1", chuDe:"Triển vọng", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Theo định hướng phát triển, tỉ lệ che phủ rừng của nước ta cần duy trì ở mức nào?",
-  luaChon:["Dưới 35%","Từ 42% đến 43%","Từ 50% đến 55%","Trên 60%"],
-  dapAn:1,
-  giaiThich:"Định hướng phát triển lâm nghiệp: duy trì tỉ lệ che phủ rừng của nước ta ở mức từ 42% đến 43%, quản lí bền vững các hệ sinh thái rừng." },
-{ id:"B1B-07", bai:"Bài 1", chuDe:"Người lao động", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Yêu cầu nào sau đây là KHÔNG cần thiết đối với người lao động trong các ngành nghề lâm nghiệp?",
-  luaChon:["Có sức khỏe tốt, chịu khó, có trách nhiệm",
-           "Có kiến thức, kĩ năng về lâm nghiệp",
-           "Biết vận hành máy móc, thiết bị hiện đại",
-           "Thích đọc sách, vẽ tranh và du lịch"],
-  dapAn:3,
-  giaiThich:"Lao động lâm nghiệp cần sức khỏe, kiến thức lâm nghiệp và khả năng vận hành thiết bị; sở thích đọc sách, vẽ tranh, du lịch không phải yêu cầu nghề nghiệp." },
-{ id:"B1B-08", bai:"Bài 1", chuDe:"Đặc trưng sản xuất", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Đối tượng của sản xuất lâm nghiệp là gì?",
-  luaChon:["Máy móc và dây chuyền công nghệ",
-           "Các cơ thể sống, có chu kì sinh trưởng dài",
-           "Đất đai và nguồn nước",
-           "Các cơ thể sống, có chu kì sinh trưởng ngắn"],
-  dapAn:1,
-  giaiThich:"Đối tượng của sản xuất lâm nghiệp là các cơ thể sống (chủ yếu là cây rừng) có chu kì sinh trưởng dài — đây là đặc trưng cơ bản nhất của ngành." },
-{ id:"B1H-01", bai:"Bài 1", chuDe:"Đặc trưng sản xuất", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Vì sao sản xuất lâm nghiệp có tính thời vụ cao?",
-  luaChon:["Vì công nhân lâm nghiệp chỉ làm việc theo mùa",
-           "Vì nhiều công việc như trồng, chăm sóc, khai thác phụ thuộc vào điều kiện tự nhiên, tập trung vào một số tháng trong năm",
-           "Vì máy móc chỉ hoạt động được vào mùa khô",
-           "Vì rừng chỉ sinh trưởng vào mùa mưa"],
-  dapAn:1,
-  giaiThich:"Các khâu trồng rừng (thường vào mùa mưa), chăm sóc, khai thác đều gắn với điều kiện tự nhiên nên công việc tập trung vào một số tháng nhất định — đó là tính thời vụ." },
-{ id:"B1H-02", bai:"Bài 1", chuDe:"Triển vọng", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Nhận định nào sau đây đúng về triển vọng kinh tế của lâm nghiệp nước ta?",
-  luaChon:["Giảm dần sản lượng gỗ khai thác từ rừng trồng",
-           "Trở thành ngành kinh tế — kĩ thuật hiện đại, tăng giá trị xuất khẩu gỗ và lâm sản từ nguồn nguyên liệu hợp pháp",
-           "Chỉ tập trung khai thác rừng tự nhiên để tăng thu nhập",
-           "Giảm tỉ lệ lao động được đào tạo nghề trong lĩnh vực lâm nghiệp"],
-  dapAn:1,
-  giaiThich:"Định hướng: lâm nghiệp trở thành ngành kinh tế — kĩ thuật hiện đại, tăng sản lượng gỗ từ rừng trồng, đảm bảo nguồn gỗ hợp pháp có chứng chỉ quản lí rừng bền vững." },
-
-// ================= BÀI 2: HOẠT ĐỘNG LÂM NGHIỆP & SUY THOÁI RỪNG =================
-{ id:"B2B-01", bai:"Bài 2", chuDe:"Hoạt động lâm nghiệp", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Hoạt động nào sau đây KHÔNG thuộc các hoạt động lâm nghiệp cơ bản?",
-  luaChon:["Quản lí rừng","Bảo vệ rừng","Đốt rừng làm nương rẫy","Chế biến và thương mại lâm sản"],
-  dapAn:2,
-  giaiThich:"5 hoạt động lâm nghiệp cơ bản: quản lí rừng, bảo vệ rừng, phát triển rừng, sử dụng rừng, chế biến và thương mại lâm sản. Đốt rừng làm nương rẫy là hành vi phá hoại rừng." },
-{ id:"B2B-02", bai:"Bài 2", chuDe:"Phát triển rừng", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Hoạt động nào sau đây thuộc về phát triển rừng?",
-  luaChon:["Phòng cháy, chữa cháy rừng",
-           "Trồng mới rừng trên đất trống, đồi trọc",
-           "Khai thác gỗ để bán",
-           "Chế biến đồ gỗ mỹ nghệ"],
-  dapAn:1,
-  giaiThich:"Phát triển rừng gồm: trồng mới rừng, cải tạo rừng nghèo kiệt, khoanh nuôi xúc tiến tái sinh, phát triển giống cây lâm nghiệp." },
-{ id:"B2B-03", bai:"Bài 2", chuDe:"Nguyên nhân suy thoái", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Hoạt động nào sau đây KHÔNG phải là nguyên nhân gây suy thoái tài nguyên rừng?",
-  luaChon:["Khai thác gỗ trái phép, quá mức",
-           "Phá rừng để trồng cây công nghiệp",
-           "Cháy rừng do đốt nương rẫy",
-           "Giao đất, giao rừng cho chủ rừng quản lí theo quy định"],
-  dapAn:3,
-  giaiThich:"Giao đất, giao rừng theo quy định giúp mọi diện tích rừng đều có chủ quản lí, gắn trách nhiệm bảo vệ — đây là GIẢI PHÁP khắc phục suy thoái, không phải nguyên nhân." },
-{ id:"B2B-04", bai:"Bài 2", chuDe:"Giải pháp khắc phục", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Giải pháp nào sau đây giúp khắc phục tình trạng suy thoái tài nguyên rừng?",
-  luaChon:["Chuyển rừng ngập mặn sang đầm nuôi tôm",
-           "Tăng cường khai thác gỗ để phát triển kinh tế",
-           "Xây dựng các khu bảo tồn, vườn quốc gia",
-           "Mở rộng diện tích trồng cây công nghiệp trên đất rừng"],
-  dapAn:2,
-  giaiThich:"Xây dựng khu bảo tồn, vườn quốc gia giúp bảo vệ các loài động, thực vật quý hiếm và hệ sinh thái rừng — là giải pháp khắc phục suy thoái hiệu quả." },
-{ id:"B2H-01", bai:"Bài 2", chuDe:"Nguyên nhân suy thoái", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Vì sao chăn thả gia súc tự do trong rừng gây suy thoái tài nguyên rừng?",
-  luaChon:["Vì phân gia súc làm đất rừng bị nhiễm mặn",
-           "Vì gia súc dẫm đạp, ăn cây tái sinh, phá vỡ cấu trúc đất rừng",
-           "Vì gia súc cạnh tranh ánh sáng với cây rừng",
-           "Vì gia súc làm tăng độ ẩm trong rừng"],
-  dapAn:1,
-  giaiThich:"Gia súc dẫm đạp làm chặt đất, ăn mất lớp cây tái sinh và cây con, phá vỡ cấu trúc đất — khiến rừng khó phục hồi, dẫn đến suy thoái." },
-{ id:"B2H-02", bai:"Bài 2", chuDe:"Hoạt động lâm nghiệp", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Hoạt động 'khoanh nuôi, xúc tiến tái sinh phục hồi rừng' thuộc nhóm hoạt động nào?",
-  luaChon:["Quản lí rừng","Bảo vệ rừng","Phát triển rừng","Sử dụng rừng"],
-  dapAn:2,
-  giaiThich:"Khoanh nuôi xúc tiến tái sinh là biện pháp làm tăng diện tích, chất lượng rừng — thuộc nhóm phát triển rừng." },
-{ id:"B2H-03", bai:"Bài 2", chuDe:"Giải pháp khắc phục", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Vì sao 'lập quy hoạch, kế hoạch bảo vệ và phát triển rừng' là giải pháp quan trọng?",
-  luaChon:["Vì giúp tăng nhanh diện tích rừng trong một năm",
-           "Vì giúp quản lí rừng thống nhất, ngăn chặn kịp thời các tác động tiêu cực vào rừng",
-           "Vì giúp giảm biên chế bộ máy quản lí",
-           "Vì giúp tăng giá gỗ trên thị trường"],
-  dapAn:1,
-  giaiThich:"Quy hoạch, kế hoạch giúp Nhà nước quản lí thống nhất tài nguyên rừng, chủ động ngăn chặn các hành vi xâm hại rừng." },
-{ id:"B2H-04", bai:"Bài 2", chuDe:"Khai thác bền vững", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Nhận định nào sau đây đúng về khai thác tài nguyên rừng?",
-  luaChon:["Khai thác càng nhiều gỗ càng tốt để phát triển kinh tế",
-           "Khai thác với cường độ nhỏ hơn khả năng tái sinh của rừng thì rừng có thể phục hồi — đó là khai thác bền vững",
-           "Nên khai thác trắng toàn bộ rồi bỏ hoang cho rừng tự phục hồi",
-           "Khai thác rừng không ảnh hưởng đến đa dạng sinh học"],
-  dapAn:1,
-  giaiThich:"Nguyên tắc của khai thác bền vững: cường độ khai thác không vượt quá khả năng tái sinh của rừng, đồng thời phải trồng lại rừng sau khai thác." },
-
-// ================= BÀI 3: TRỒNG VÀ CHĂM SÓC RỪNG =================
-{ id:"B3B-01", bai:"Bài 3", chuDe:"Vai trò trồng rừng", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Vai trò quan trọng của trồng rừng là gì?",
-  luaChon:["Cung cấp lương thực cho con người",
-           "Phủ xanh đất trống, đồi núi trọc",
-           "Tạo nơi sinh hoạt tín ngưỡng",
-           "Mở rộng diện tích trồng cây ăn quả"],
-  dapAn:1,
-  giaiThich:"Trồng rừng có vai trò phủ xanh đất trống, đồi núi trọc, cung cấp lâm sản, bảo vệ môi trường và góp phần bảo tồn đa dạng sinh học." },
-{ id:"B3B-02", bai:"Bài 3", chuDe:"Chăm sóc rừng", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Nhóm công việc nào sau đây đều thuộc hoạt động chăm sóc rừng?",
-  luaChon:["Làm cỏ, tỉa cành, bón phân, tưới nước",
-           "Khai thác trắng, vận chuyển gỗ",
-           "Đốt nương, phát dọn thực bì",
-           "Xây dựng nhà xưởng chế biến gỗ"],
-  dapAn:0,
-  giaiThich:"Chăm sóc rừng gồm: làm cỏ, xới đất, tỉa cành, tỉa thưa, bón phân, tưới nước, trồng dặm, phòng trừ sâu bệnh." },
-{ id:"B3B-03", bai:"Bài 3", chuDe:"Nhiệm vụ trồng rừng", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Trồng rừng phòng hộ đầu nguồn nhằm mục đích chủ yếu nào?",
-  luaChon:["Cung cấp gỗ cho công nghiệp giấy",
-           "Bảo vệ nguồn nước, bảo vệ đất, chống xói mòn",
-           "Tạo cảnh quan du lịch sinh thái",
-           "Mở rộng diện tích cây công nghiệp"],
-  dapAn:1,
-  giaiThich:"Nhiệm vụ của trồng rừng phòng hộ đầu nguồn là bảo vệ nguồn nước, bảo vệ đất, chống xói mòn, điều hòa dòng chảy." },
-{ id:"B3B-04", bai:"Bài 3", chuDe:"Chăm sóc rừng", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"'Trồng dặm' trong chăm sóc rừng được hiểu là gì?",
-  luaChon:["Trồng xen cây nông nghiệp vào rừng",
-           "Trồng bổ sung cây vào những chỗ cây bị chết để đảm bảo mật độ",
-           "Trồng cây với mật độ thật dày",
-           "Trồng cây để làm hàng rào bảo vệ rừng"],
-  dapAn:1,
-  giaiThich:"Trồng dặm là trồng bổ sung cây con vào những vị trí cây bị chết sau khi trồng, nhằm đảm bảo mật độ trồng theo đúng kĩ thuật." },
-{ id:"B3H-01", bai:"Bài 3", chuDe:"Chăm sóc rừng", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Mục đích chính của biện pháp tỉa thưa trong chăm sóc rừng trồng là gì?",
-  luaChon:["Loại bỏ cây bị sâu bệnh để lấy củi",
-           "Tăng mật độ cây trên một đơn vị diện tích",
-           "Tạo không gian dinh dưỡng, ánh sáng cho những cây giữ lại sinh trưởng tốt hơn",
-           "Hạn chế sự cạnh tranh của cây dại với cây rừng"],
-  dapAn:2,
-  giaiThich:"Tỉa thưa là chặt bỏ bớt cây xấu, cây bị chèn ép để những cây tốt còn lại có đủ ánh sáng, dinh dưỡng và không gian sinh trưởng, nâng cao chất lượng gỗ." },
-{ id:"B3H-02", bai:"Bài 3", chuDe:"Chăm sóc rừng", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Vì sao phải làm cỏ, xới đất quanh gốc cây rừng non?",
-  luaChon:["Để đất tơi xốp cho đẹp",
-           "Để giảm sự cạnh tranh ánh sáng, nước, chất dinh dưỡng của cây dại với cây rừng",
-           "Để ngăn gia súc vào rừng",
-           "Để tăng độ dốc của đất"],
-  dapAn:1,
-  giaiThich:"Cây dại cạnh tranh ánh sáng, nước và dinh dưỡng với cây rừng non; làm cỏ, xới đất giúp cây rừng non sinh trưởng tốt, tăng tỉ lệ sống." },
-{ id:"B3H-03", bai:"Bài 3", chuDe:"Phân biệt trồng/chăm sóc", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Hoạt động nào sau đây thuộc về TRỒNG rừng (không phải chăm sóc rừng)?",
-  luaChon:["Tỉa cành, bón phân",
-           "Làm cỏ, tưới nước",
-           "Gieo hạt, trồng cây con",
-           "Trồng dặm, tỉa thưa"],
-  dapAn:2,
-  giaiThich:"Trồng rừng là tạo rừng mới (gieo hạt, trồng cây con...); các công việc còn lại (làm cỏ, tỉa cành, bón phân, trồng dặm, tỉa thưa) thuộc chăm sóc rừng." },
-{ id:"B3H-04", bai:"Bài 3", chuDe:"Vai trò chăm sóc", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Chăm sóc rừng đúng kĩ thuật mang lại kết quả nào sau đây?",
-  luaChon:["Làm giảm lũ lụt, hạn hán ngay lập tức",
-           "Tăng tỉ lệ sống của cây con, giúp rừng sinh trưởng, phát triển tốt",
-           "Giúp cây ra hoa, kết quả ngay trong năm đầu",
-           "Loại bỏ hoàn toàn sâu bệnh hại rừng"],
-  dapAn:1,
-  giaiThich:"Vai trò của chăm sóc rừng: tạo điều kiện cho rừng non sinh trưởng tốt, tăng tỉ lệ sống của cây con, nâng cao chất lượng và giá trị kinh tế của rừng." },
-
-// ================= BÀI 4: QUY LUẬT SINH TRƯỞNG VÀ PHÁT TRIỂN =================
-{ id:"B4V-01", bai:"Bài 4", chuDe:"Quy luật sinh trưởng", mucDo:"vandung", loai:"tracnghiem",
-  noiDung:"Một chủ rừng muốn khai thác gỗ để thu hiệu quả kinh tế cao nhất. Theo quy luật sinh trưởng và phát triển của cây rừng, nên khai thác ở giai đoạn nào?",
-  luaChon:["Giai đoạn non, vì cây đang lớn rất nhanh",
-           "Giai đoạn gần thành thục, vì cây sắp ra hoa",
-           "Giai đoạn thành thục, vì sinh trưởng đạt cực đại, chất lượng gỗ ổn định",
-           "Giai đoạn già cỗi, vì cây đã ngừng lớn, gỗ chắc nhất"],
-  dapAn:2,
-  giaiThich:"Ở giai đoạn thành thục, sinh trưởng đường kính, chiều cao đạt kích thước cực đại, chất lượng lâm sản ổn định — khai thác lúc này cho hiệu quả kinh tế cao nhất." },
-{ id:"B4V-02", bai:"Bài 4", chuDe:"Quy luật sinh trưởng", mucDo:"vandung", loai:"tracnghiem",
-  noiDung:"Vì sao không nên để rừng trồng sản xuất đến giai đoạn già cỗi mới khai thác?",
-  luaChon:["Vì cây già cỗi vẫn tiếp tục lớn nhanh, để lâu lãng phí đất",
-           "Vì ở giai đoạn già cỗi, tăng trưởng ngừng hẳn, gỗ dễ bị rỗng ruột, sâu bệnh, hiệu quả kinh tế thấp",
-           "Vì cây già cỗi ra hoa, kết quả nhiều làm giảm chất lượng gỗ",
-           "Vì pháp luật cấm khai thác rừng ở giai đoạn già cỗi"],
-  dapAn:1,
-  giaiThich:"Giai đoạn già cỗi: tăng trưởng hằng năm giảm rồi ngừng hẳn, cây dễ bị rỗng ruột, sâu bệnh, chất lượng gỗ giảm — khai thác muộn gây thiệt hại kinh tế." },
-
-// ================= BÀI 5: KĨ THUẬT TRỒNG VÀ CHĂM SÓC RỪNG =================
-{ id:"B5B-01", bai:"Bài 5", chuDe:"Thời vụ trồng rừng", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Thời vụ trồng rừng thích hợp ở miền Bắc nước ta là khi nào?",
-  luaChon:["Mùa hè","Mùa thu","Mùa đông","Mùa xuân và xuân hè"],
-  dapAn:3,
-  giaiThich:"Miền Bắc trồng rừng vào mùa xuân và xuân hè (khoảng tháng 2 đến tháng 7) khi thời tiết ấm, ẩm thuận lợi cho cây bén rễ." },
-{ id:"B5B-02", bai:"Bài 5", chuDe:"Thời vụ trồng rừng", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Thời vụ trồng rừng thích hợp ở miền Trung và miền Nam nước ta là khi nào?",
-  luaChon:["Mùa xuân","Mùa hè","Mùa mưa","Mùa đông"],
-  dapAn:2,
-  giaiThich:"Miền Trung và miền Nam trồng rừng vào mùa mưa (miền Trung khoảng tháng 9–12, miền Nam khoảng tháng 5–11) để cây đủ ẩm, tỉ lệ sống cao." },
-{ id:"B5H-01", bai:"Bài 5", chuDe:"Thời vụ trồng rừng", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Vì sao phải trồng rừng đúng thời vụ?",
-  luaChon:["Để giảm lượng phân bón và tăng mật độ trồng",
-           "Để cây có tỉ lệ sống cao, sinh trưởng và phát triển tốt",
-           "Để ngăn chặn gia súc phá hại cây rừng",
-           "Để hạn chế cỏ dại mọc trong rừng"],
-  dapAn:1,
-  giaiThich:"Trồng đúng thời vụ (đủ ẩm, nhiệt độ phù hợp) giúp cây con bén rễ nhanh, tỉ lệ sống cao, sinh trưởng tốt — là yếu tố quyết định thành công của trồng rừng." },
-{ id:"B5H-02", bai:"Bài 5", chuDe:"Kĩ thuật chăm sóc", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"'Tỉa cành khô' trong chăm sóc rừng được hiểu là gì?",
-  luaChon:["Cắt bỏ cành đã chết nhưng chưa rụng khỏi cây",
-           "Cắt hết các cành ở phía dưới tán cây",
-           "Cắt bỏ toàn bộ cành non mới mọc",
-           "Cắt cành để lấy củi đun nấu"],
-  dapAn:0,
-  giaiThich:"Tỉa cành khô là cắt bỏ những cành đã chết nhưng chưa rụng; còn tỉa cành tươi là cắt cành phụ, cành quá lớn ở phía dưới tán để cây tập trung dinh dưỡng nuôi thân." },
-
-// ================= BÀI 6: BẢO VỆ VÀ KHAI THÁC RỪNG BỀN VỮNG =================
-{ id:"B6B-01", bai:"Bài 6", chuDe:"Ý nghĩa bền vững", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Ý nghĩa của việc bảo vệ và khai thác tài nguyên rừng bền vững là gì?",
-  luaChon:["Chỉ khai thác rừng để phát triển kinh tế trước mắt",
-           "Vừa đáp ứng nhu cầu hiện tại vừa giữ được rừng cho các thế hệ mai sau",
-           "Ngừng hoàn toàn mọi hoạt động khai thác rừng",
-           "Chuyển toàn bộ rừng tự nhiên thành rừng trồng"],
-  dapAn:1,
-  giaiThich:"Bền vững nghĩa là khai thác, sử dụng hợp lí để vừa đáp ứng nhu cầu hiện tại, vừa duy trì và tái tạo tài nguyên rừng cho thế hệ sau." },
-{ id:"B6B-02", bai:"Bài 6", chuDe:"Nhiệm vụ bảo vệ", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Nhiệm vụ nào sau đây thuộc về bảo vệ rừng?",
-  luaChon:["Khai thác gỗ để xuất khẩu",
-           "Chế biến đồ gỗ mỹ nghệ",
-           "Phòng cháy, chữa cháy rừng; ngăn chặn khai thác trái phép",
-           "Trồng cây công nghiệp trên đất rừng"],
-  dapAn:2,
-  giaiThich:"Bảo vệ rừng gồm: phòng cháy chữa cháy, phòng trừ sâu bệnh, ngăn chặn khai thác, săn bắt trái phép và các tác động tiêu cực của con người đến rừng." },
-{ id:"B6B-03", bai:"Bài 6", chuDe:"Thực trạng", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Nhận định nào sau đây đúng về thực trạng tài nguyên rừng ở nước ta hiện nay?",
-  luaChon:["Rừng tự nhiên còn nguyên vẹn, không bị suy giảm",
-           "Diện tích rừng trồng tăng lên nhưng chất lượng rừng tự nhiên ở nhiều nơi còn thấp, bị suy thoái",
-           "Đã chấm dứt hoàn toàn tình trạng phá rừng",
-           "Không còn diện tích đất trống, đồi trọc"],
-  dapAn:1,
-  giaiThich:"Nhờ trồng rừng, độ che phủ tăng; nhưng rừng tự nhiên nhiều nơi vẫn bị suy thoái, chất lượng thấp — đó là thực trạng cần khắc phục." },
-{ id:"B6B-04", bai:"Bài 6", chuDe:"Nhiệm vụ bảo vệ", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Hoạt động nào sau đây góp phần bảo vệ tài nguyên rừng?",
-  luaChon:["Tự ý vào rừng khai thác gỗ bán lấy tiền",
-           "Đốt rừng làm nương rẫy",
-           "Tuần tra, giám sát, ngăn chặn các hành vi xâm hại rừng",
-           "Thu hái dược liệu quý trái phép trong rừng"],
-  dapAn:2,
-  giaiThich:"Tuần tra, giám sát và ngăn chặn kịp thời các hành vi xâm hại là nhiệm vụ trực tiếp của bảo vệ rừng." },
-{ id:"B6H-01", bai:"Bài 6", chuDe:"Bảo vệ gắn với khai thác", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Vì sao cần kết hợp bảo vệ rừng với khai thác, sử dụng hợp lí thay vì 'cấm tuyệt đối mọi khai thác'?",
-  luaChon:["Vì cấm khai thác sẽ làm rừng phát triển quá nhanh",
-           "Vì rừng cần được sử dụng hợp lí để phát huy giá trị kinh tế, tạo sinh kế cho người dân, đồng thời vẫn tái tạo được",
-           "Vì gỗ rừng không có giá trị sử dụng",
-           "Vì bảo vệ rừng không mang lại lợi ích gì"],
-  dapAn:1,
-  giaiThich:"Bảo vệ bền vững không phải là 'đóng cửa rừng' mà là khai thác, sử dụng hợp lí: vừa phát huy giá trị kinh tế, tạo việc làm, vừa đảm bảo rừng được tái sinh." },
-{ id:"B6H-02", bai:"Bài 6", chuDe:"Thực trạng địa phương", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Ở địa phương A, rừng được giao cho hộ dân quản lí nên được bảo vệ tốt; ở địa phương B, rừng 'vô chủ' bị lấn chiếm, tàn phá. Từ thực tế này rút ra bài học gì?",
-  luaChon:["Nên để rừng tự nhiên, không cần giao cho ai",
-           "Giao đất, giao rừng gắn quyền lợi và trách nhiệm của chủ rừng giúp bảo vệ rừng hiệu quả hơn",
-           "Nên thu hồi hết rừng về Nhà nước quản lí trực tiếp",
-           "Bảo vệ rừng chỉ là trách nhiệm của kiểm lâm"],
-  dapAn:1,
-  giaiThich:"Khi rừng có chủ cụ thể, quyền lợi gắn với trách nhiệm, người dân sẽ tích cực bảo vệ — đây là bài học từ thực tiễn giao đất, giao rừng." },
-{ id:"B6V-01", bai:"Bài 6", chuDe:"Nâng cao ý thức", mucDo:"vandung", loai:"tracnghiem",
-  noiDung:"Để nâng cao ý thức bảo vệ rừng cho người dân địa phương một cách bền vững, biện pháp nào sau đây hiệu quả nhất?",
-  luaChon:["Chỉ tăng mức phạt vi phạm thật nặng",
-           "Tuyên truyền, giáo dục kết hợp giao rừng cho dân quản lí và được hưởng lợi từ rừng",
-           "Cấm người dân vào rừng tuyệt đối",
-           "Thuê bảo vệ canh rừng thay cho người dân"],
-  dapAn:1,
-  giaiThich:"Biện pháp căn cơ, lâu dài là tuyên truyền nâng cao nhận thức kết hợp giao rừng cho dân — khi người dân được hưởng lợi từ rừng, họ sẽ tự giác bảo vệ." },
-{ id:"B6V-02", bai:"Bài 6", chuDe:"Giải pháp thực tiễn", mucDo:"vandung", loai:"tracnghiem",
-  noiDung:"Một xã miền núi có tình trạng người dân đốt rừng làm nương rẫy. Giải pháp căn cơ, lâu dài nhất là gì?",
-  luaChon:["Mặc kệ vì đó là tập quán lâu đời",
-           "Tuyên truyền, hỗ trợ sinh kế thay thế, giao đất rừng ổn định cho dân kết hợp xử lí nghiêm vi phạm",
-           "Cấm trồng trọt hoàn toàn ở xã đó",
-           "Chuyển toàn bộ dân ra khỏi vùng rừng"],
-  dapAn:1,
-  giaiThich:"Cần giải quyết nguyên nhân gốc rễ (thiếu đất sản xuất, thiếu hiểu biết) bằng tuyên truyền, hỗ trợ sinh kế, giao đất ổn định, đồng thời xử lí nghiêm vi phạm." },
-{ id:"B6V-03", bai:"Bài 6", chuDe:"Giải pháp thực tiễn", mucDo:"vandung", loai:"tracnghiem",
-  noiDung:"Khu rừng đặc dụng của địa phương đang bị khai thác gỗ trái phép. Biện pháp cần làm ngay là gì?",
-  luaChon:["Chờ rừng tự phục hồi",
-           "Tăng cường tuần tra, kiểm soát, xử lí nghiêm các vụ vi phạm",
-           "Cho phép khai thác hợp pháp để dễ quản lí",
-           "Giảm lực lượng kiểm lâm để tiết kiệm chi phí"],
-  dapAn:1,
-  giaiThich:"Trước mắt phải ngăn chặn ngay hành vi vi phạm bằng tuần tra, kiểm soát chặt và xử lí nghiêm; về lâu dài kết hợp tuyên truyền và giao rừng cho cộng đồng." },
-{ id:"B6V-04", bai:"Bài 6", chuDe:"Khai thác bền vững", mucDo:"vandung", loai:"tracnghiem",
-  noiDung:"Vì sao 'khai thác trắng rồi bỏ hoang đất' là cách làm phản bền vững?",
-  luaChon:["Vì khai thác trắng cho sản lượng gỗ thấp",
-           "Vì đất bị bỏ hoang sẽ mất khả năng tái sinh rừng, dễ xói mòn; đúng ra phải trồng lại rừng ngay sau khai thác",
-           "Vì khai thác trắng tốn nhiều nhân công",
-           "Vì gỗ khai thác trắng khó bán"],
-  dapAn:1,
-  giaiThich:"Khai thác mà không trồng lại làm đất trống đồi trọc, xói mòn, mất khả năng tái sinh — trái với nguyên tắc bền vững: khai thác đi đôi với trồng lại rừng." },
-
-// ================= BÀI 7: BIỆN PHÁP BẢO VỆ VÀ KHAI THÁC RỪNG =================
-{ id:"B7B-01", bai:"Bài 7", chuDe:"Biện pháp bảo vệ", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Biện pháp nào sau đây thuộc nhóm biện pháp bảo vệ rừng?",
-  luaChon:["Khai thác tỉa thưa","Phòng cháy, chữa cháy rừng","Chế biến gỗ xuất khẩu","Trồng cây công nghiệp"],
-  dapAn:1,
-  giaiThich:"Phòng cháy, chữa cháy rừng là biện pháp bảo vệ rừng quan trọng hàng đầu, cùng với tuần tra ngăn chặn xâm hại và phòng trừ sâu bệnh." },
-{ id:"B7B-02", bai:"Bài 7", chuDe:"Khai thác bền vững", mucDo:"biet", loai:"tracnghiem",
-  noiDung:"Thế nào là khai thác rừng bền vững?",
-  luaChon:["Khai thác tối đa gỗ trong thời gian ngắn nhất",
-           "Khai thác không vượt quá khả năng tái sinh của rừng và có trồng lại rừng",
-           "Chỉ khai thác rừng trồng, cấm khai thác rừng tự nhiên",
-           "Khai thác toàn bộ rồi chuyển đất rừng sang mục đích khác"],
-  dapAn:1,
-  giaiThich:"Khai thác bền vững: cường độ khai thác không vượt quá khả năng tái sinh của rừng, áp dụng biện pháp khai thác phù hợp và trồng lại rừng sau khai thác." },
-{ id:"B7H-01", bai:"Bài 7", chuDe:"Các hình thức khai thác", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Điểm khác nhau cơ bản giữa 'khai thác tỉa thưa' và 'khai thác trắng' là gì?",
-  luaChon:["Tỉa thưa chặt toàn bộ, khai thác trắng chỉ chặt một phần",
-           "Tỉa thưa chỉ chặt chọn lọc một số cây, rừng vẫn được duy trì; khai thác trắng chặt toàn bộ cây trên diện tích trong một lần",
-           "Khai thác trắng cho gỗ tốt hơn tỉa thưa",
-           "Hai hình thức này hoàn toàn giống nhau"],
-  dapAn:1,
-  giaiThich:"Tỉa thưa: chặt chọn cây xấu, cây bị chèn ép, rừng vẫn duy trì sinh trưởng. Khai thác trắng: chặt toàn bộ trong một lần, sau đó phải trồng lại rừng." },
-{ id:"B7H-02", bai:"Bài 7", chuDe:"Trồng lại sau khai thác", mucDo:"hieu", loai:"tracnghiem",
-  noiDung:"Vì sao sau khi khai thác phải trồng lại rừng ngay?",
-  luaChon:["Để đất không bị người khác lấn chiếm",
-           "Để nhanh phục hồi độ che phủ, chống xói mòn đất và đảm bảo tái sinh rừng",
-           "Để có việc làm cho công nhân",
-           "Để tăng giá trị đất rừng"],
-  dapAn:1,
-  giaiThich:"Trồng lại ngay giúp phục hồi độ che phủ, chống xói mòn, rửa trôi đất và đảm bảo rừng được tái sinh liên tục — yêu cầu bắt buộc của khai thác bền vững." },
-{ id:"B7V-01", bai:"Bài 7", chuDe:"Tình huống khai thác", mucDo:"vandung", loai:"tracnghiem",
-  noiDung:"Một công ty được giao rừng sản xuất. Phương án khai thác nào sau đây là bền vững nhất?",
-  luaChon:["Khai thác trắng toàn bộ diện tích mỗi năm",
-           "Khai thác tỉa thưa theo chu kì, kết hợp trồng dặm bổ sung những chỗ trống",
-           "Ngừng khai thác hoàn toàn để rừng tự phát triển",
-           "Chỉ khai thác cây to, bỏ mặc cây nhỏ"],
-  dapAn:1,
-  giaiThich:"Khai thác tỉa thưa theo chu kì + trồng dặm là phương án bền vững: vừa thu được gỗ, vừa duy trì được rừng và khả năng tái sinh liên tục." },
-{ id:"B7V-02", bai:"Bài 7", chuDe:"Rừng ngập mặn", mucDo:"vandung", loai:"tracnghiem",
-  noiDung:"Một số hộ dân tự ý chặt phá rừng ngập mặn để làm đầm nuôi tôm. Hậu quả nghiêm trọng nhất có thể xảy ra là gì?",
-  luaChon:["Giảm sản lượng tôm nuôi",
-           "Mất vành đai chắn sóng, tăng nguy cơ sạt lở bờ biển và xâm nhập mặn khi có bão",
-           "Tăng diện tích đất nuôi trồng thủy sản",
-           "Làm tăng thu nhập cho người dân"],
-  dapAn:1,
-  giaiThich:"Rừng ngập mặn là vành đai chắn sóng, chắn gió, chống sạt lở và xâm nhập mặn. Chặt phá sẽ khiến bờ biển mất lá chắn tự nhiên, hậu quả nặng nề khi bão, triều cường." },
-
-// ================= PHẦN II: CÂU HỎI ĐÚNG / SAI (mỗi câu 4 ý) =================
-{ id:"DSB2-01", bai:"Bài 2", chuDe:"Nguyên nhân suy thoái rừng", mucDo:"hieu", loai:"dungsai",
-  noiDung:"Đánh giá Đúng/Sai cho mỗi ý sau về nguyên nhân suy thoái tài nguyên rừng:",
-  y:[
-    { noiDung:"a) Khai thác gỗ trái phép, quá mức làm nhiều hệ sinh thái rừng bị suy giảm nghiêm trọng.", dung:true, mucDo:"biet" },
-    { noiDung:"b) Cháy rừng chỉ làm mất thực vật rừng, không làm đất rừng bị thoái hóa.", dung:false, mucDo:"hieu" },
-    { noiDung:"c) Giao đất, giao rừng cho chủ rừng quản lí theo quy định góp phần khắc phục suy thoái rừng.", dung:true, mucDo:"vandung" },
-    { noiDung:"d) Nên khuyến khích người dân đốt rừng làm nương rẫy để phát triển kinh tế miền núi.", dung:false, mucDo:"vandung" }
-  ],
-  giaiThich:"Cháy rừng làm đất bị thoái hóa, xói mòn. Đốt rừng làm nương rẫy là nguyên nhân gây suy thoái, tuyệt đối không khuyến khích." },
-{ id:"DSB2-02", bai:"Bài 2", chuDe:"Giải pháp bảo vệ rừng", mucDo:"hieu", loai:"dungsai",
-  noiDung:"Đánh giá Đúng/Sai cho mỗi ý sau về các giải pháp bảo vệ tài nguyên rừng:",
-  y:[
-    { noiDung:"a) Tuyên truyền, nâng cao ý thức bảo vệ rừng cho người dân là giải pháp quan trọng.", dung:true, mucDo:"biet" },
-    { noiDung:"b) Xây dựng khu bảo tồn, vườn quốc gia giúp bảo vệ các loài động, thực vật rừng quý hiếm.", dung:true, mucDo:"hieu" },
-    { noiDung:"c) Tăng cường khai thác gỗ để phát triển kinh tế địa phương sẽ giúp khắc phục suy thoái rừng.", dung:false, mucDo:"vandung" },
-    { noiDung:"d) Chăn thả trâu, bò trong rừng mới trồng giúp giảm công làm cỏ nên cần khuyến khích.", dung:false, mucDo:"vandung" }
-  ],
-  giaiThich:"Tăng khai thác và chăn thả trong rừng non đều gây suy thoái thêm, không phải giải pháp. Giải pháp đúng là tuyên truyền, khu bảo tồn, giao rừng cho dân." },
-{ id:"DSB4-01", bai:"Bài 4", chuDe:"Quy luật sinh trưởng", mucDo:"hieu", loai:"dungsai",
-  noiDung:"Đánh giá Đúng/Sai cho mỗi ý sau về quy luật sinh trưởng và phát triển của cây rừng:",
-  y:[
-    { noiDung:"a) Ở giai đoạn non, cây rừng sinh trưởng nhanh về chiều cao và đường kính thân.", dung:true, mucDo:"biet" },
-    { noiDung:"b) Sự ra hoa, kết quả của cây là biểu hiện của quá trình phát triển.", dung:true, mucDo:"hieu" },
-    { noiDung:"c) Nên khai thác rừng lấy gỗ ở giai đoạn non vì lúc này cây đang lớn nhanh nhất.", dung:false, mucDo:"vandung" },
-    { noiDung:"d) Để rừng đến giai đoạn già cỗi mới khai thác sẽ cho hiệu quả kinh tế cao nhất.", dung:false, mucDo:"vandung" }
-  ],
-  giaiThich:"Sinh trưởng (tăng kích thước, khối lượng) khác phát triển (biến đổi về chất: ra hoa, kết quả). Khai thác hiệu quả nhất ở giai đoạn thành thục." },
-{ id:"DSB4-02", bai:"Bài 4", chuDe:"Các giai đoạn sinh trưởng", mucDo:"hieu", loai:"dungsai",
-  noiDung:"Một khu rừng trồng đang có nhiều cây ra hoa, kết quả; một số cây có biểu hiện rỗng ruột, tăng trưởng chậm lại. Đánh giá Đúng/Sai các ý sau:",
-  y:[
-    { noiDung:"a) Sinh trưởng của cây rừng là sự tăng lên về kích thước và khối lượng của cây.", dung:true, mucDo:"biet" },
-    { noiDung:"b) Cây ra hoa, kết quả nhiều, chất lượng cao nhất ở giai đoạn thành thục.", dung:true, mucDo:"hieu" },
-    { noiDung:"c) Có thể đánh giá khả năng sinh trưởng của cây rừng qua tỉ lệ đậu quả.", dung:false, mucDo:"vandung" },
-    { noiDung:"d) Cây có biểu hiện rỗng ruột, tăng trưởng ngừng hẳn đã ở giai đoạn già cỗi, nên khai thác tận dụng và trồng lại rừng.", dung:true, mucDo:"vandung" }
-  ],
-  giaiThich:"Khả năng sinh trưởng đánh giá qua đường kính, chiều cao, thể tích — không phải tỉ lệ đậu quả (đó là biểu hiện phát triển). Cây già cỗi nên khai thác tận dụng." },
-{ id:"DSB5-01", bai:"Bài 5", chuDe:"Thời vụ trồng rừng", mucDo:"hieu", loai:"dungsai",
-  noiDung:"Đánh giá Đúng/Sai cho mỗi ý sau về thời vụ trồng rừng ở nước ta:",
-  y:[
-    { noiDung:"a) Ở miền Bắc, thời vụ trồng rừng thích hợp là mùa xuân và xuân hè.", dung:true, mucDo:"biet" },
-    { noiDung:"b) Trồng rừng đúng thời vụ giúp cây có tỉ lệ sống cao, sinh trưởng tốt.", dung:true, mucDo:"hieu" },
-    { noiDung:"c) Ở miền Nam nên trồng rừng vào mùa khô để chủ động tưới tiêu.", dung:false, mucDo:"vandung" },
-    { noiDung:"d) Có thể trồng rừng vào bất kì thời điểm nào trong năm mà không ảnh hưởng đến cây.", dung:false, mucDo:"vandung" }
-  ],
-  giaiThich:"Miền Trung và miền Nam trồng rừng vào mùa mưa để cây đủ ẩm. Trồng trái thời vụ làm cây chết nhiều, tốn công trồng lại." },
-{ id:"DSB5-02", bai:"Bài 5", chuDe:"Kĩ thuật chăm sóc", mucDo:"hieu", loai:"dungsai",
-  noiDung:"Đánh giá Đúng/Sai cho mỗi ý sau về kĩ thuật chăm sóc rừng:",
-  y:[
-    { noiDung:"a) Làm cỏ, xới đất, bón phân, tưới nước là các biện pháp chăm sóc rừng.", dung:true, mucDo:"biet" },
-    { noiDung:"b) Tỉa thưa giúp những cây được giữ lại có đủ ánh sáng, dinh dưỡng để sinh trưởng tốt.", dung:true, mucDo:"hieu" },
-    { noiDung:"c) Lượng nước tưới cho rừng non mới trồng càng nhiều càng tốt.", dung:false, mucDo:"vandung" },
-    { noiDung:"d) Không cần trồng dặm vì chỗ cây chết sẽ được cây khác mọc lên thay thế tự nhiên.", dung:false, mucDo:"vandung" }
-  ],
-  giaiThich:"Tưới nước phải phù hợp với loài cây, giai đoạn tuổi và điều kiện đất — tưới quá nhiều gây úng, thối rễ. Phải trồng dặm để đảm bảo mật độ." },
-{ id:"DSB67-01", bai:"Bài 6", chuDe:"Ý thức bảo vệ rừng", mucDo:"hieu", loai:"dungsai",
-  noiDung:"Đánh giá Đúng/Sai cho mỗi ý sau về bảo vệ tài nguyên rừng bền vững:",
-  y:[
-    { noiDung:"a) Bảo vệ và khai thác rừng bền vững vừa đáp ứng nhu cầu hiện tại vừa giữ rừng cho thế hệ mai sau.", dung:true, mucDo:"biet" },
-    { noiDung:"b) Rừng 'vô chủ' dễ bị lấn chiếm, tàn phá hơn rừng đã được giao cho chủ quản lí cụ thể.", dung:true, mucDo:"hieu" },
-    { noiDung:"c) Để phát triển kinh tế, nên cho phép khai thác tối đa tài nguyên rừng hiện có.", dung:false, mucDo:"vandung" },
-    { noiDung:"d) Chỉ cần xử phạt nặng các vụ phá rừng là đủ, không cần tuyên truyền, giáo dục ý thức cho người dân.", dung:false, mucDo:"vandung" }
-  ],
-  giaiThich:"Xử phạt chỉ giải quyết phần ngọn; muốn bền vững phải kết hợp tuyên truyền, giáo dục để người dân tự giác bảo vệ rừng. Khai thác tối đa sẽ làm cạn kiệt tài nguyên." },
-{ id:"DSB67-02", bai:"Bài 6", chuDe:"Biện pháp bảo vệ và khai thác", mucDo:"hieu", loai:"dungsai",
-  noiDung:"Đánh giá Đúng/Sai cho mỗi ý sau về biện pháp bảo vệ và khai thác rừng:",
-  y:[
-    { noiDung:"a) Phòng cháy, chữa cháy rừng là biện pháp bảo vệ rừng quan trọng.", dung:true, mucDo:"biet" },
-    { noiDung:"b) Khai thác tỉa thưa ít gây tổn hại đến rừng hơn khai thác trắng.", dung:true, mucDo:"hieu" },
-    { noiDung:"c) Sau khi khai thác trắng có thể bỏ hoang đất để rừng tự phục hồi.", dung:false, mucDo:"vandung" },
-    { noiDung:"d) Chuyển rừng ngập mặn sang đầm nuôi tôm tự phát không ảnh hưởng đến khả năng chắn sóng của rừng.", dung:false, mucDo:"vandung" }
-  ],
-  giaiThich:"Sau khai thác phải trồng lại rừng ngay, không được bỏ hoang. Rừng ngập mặn là vành đai chắn sóng tự nhiên — chặt phá gây hậu quả nghiêm trọng." }
-];
-/* ===== HẾT NGÂN HÀNG CÂU HỎI ===== */
-</script>
-<script>
-/* =====================================================================
-   PHẦN 4: LOGIC CỦA TRANG (cô/chú không cần sửa phần này)
-   ===================================================================== */
+/* ================= TRẠNG THÁI ================= */
 const state = {
-  dsCau: [], cauHienTai: 0, traLoi: {},
-  batDau: 0, timerId: null, conLai: 0,
-  daNop: false, ketQua: null, hoTen: "", lop: ""
+  maDe: "", hoTen: "", lop: "12A7", soThuTu: 0, maHS: "",
+  attemptId: null, accessCode: null, hanNop: 0, lechGio: 0,
+  cauHoi: [], cauHienTai: 0, traLoi: {}, daNop: false,
+  timerId: null, cheDo: "on_tap", dangGui: false,
+  khoaPhieu: false, choLuuDuoc: true
 };
-
 function $(id){ return document.getElementById(id); }
-function tronMang(a){
-  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-  return a;
+function thoatHTML(s){
+  return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 function hienManHinh(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  $(id).classList.add('active');
-  window.scrollTo(0,0);
-}
-function thoatHTML(s){
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $("luoi-wrap").style.display=id==="man-lam-bai"?"block":"none";
+  $(id).classList.add("active"); window.scrollTo(0,0);
 }
 function giayThanhChu(s){
   s=Math.max(0,Math.floor(s));
-  const p=Math.floor(s/60), g=s%60;
-  return (p<10?'0':'')+p+':'+(g<10?'0':'')+g;
+  var p=Math.floor(s/60), g=s%60;
+  return (p<10?"0":"")+p+":"+(g<10?"0":"")+g;
 }
-function tenMucDo(m){ return m==='biet'?'Nhận biết':(m==='hieu'?'Thông hiểu':'Vận dụng'); }
-function lamTron(d){ return Math.round(d*100)/100; }
-
-/* ---------- BỐC ĐỀ NGẪU NHIÊN THEO MA TRẬN ---------- */
-function tronDapAn(cau){ // xáo trộn thứ tự A,B,C,D của câu trắc nghiệm
-  const c = JSON.parse(JSON.stringify(cau));
-  const order = c.luaChon.map((_,i)=>i);
-  tronMang(order);
-  c.luaChon = order.map(i=>cau.luaChon[i]);
-  c.dapAn = order.indexOf(cau.dapAn);
-  return c;
-}
-function buildDeThi(){
-  const de = [];
-  MA_TRAN.phan1.forEach(slot=>{
-    const pool = NGAN_HANG_CAU_HOI.filter(q=>q.loai==="tracnghiem" && q.bai===slot.bai && q.mucDo===slot.mucDo);
-    const chon = tronMang(pool.slice()).slice(0, slot.soCau);
-    chon.forEach(q=>{ const c=tronDapAn(q); c.phan=1; de.push(c); });
-  });
-  MA_TRAN.phan2.forEach(slot=>{
-    const pool = NGAN_HANG_CAU_HOI.filter(q=>q.loai==="dungsai" && q.bai===slot.bai);
-    const chon = tronMang(pool.slice()).slice(0, slot.soCau);
-    chon.forEach(q=>{ const c=JSON.parse(JSON.stringify(q)); c.phan=2; de.push(c); });
-  });
-  return de;
-}
-
-/* ---------- MÀN HÌNH: TRANG CHỦ & THÔNG TIN ---------- */
-function veOChonLop(){
-  $('o-lop').innerHTML='<option value="">-- Chọn lớp --</option>'
-    +CONFIG.DANH_SACH_LOP.map(l=>'<option value="'+thoatHTML(l)+'">'+thoatHTML(l)+'</option>').join('');
-}
-function vaoLamBai(){
-  const hoTen=$('o-ho-ten').value.trim();
-  const lop=$('o-lop').value;
-  if(hoTen.length<2){ $('loi-thong-tin').textContent='Em nhập họ tên đầy đủ nhé.'; return; }
-  if(!lop){ $('loi-thong-tin').textContent='Em chọn lớp của mình nhé.'; return; }
-  $('loi-thong-tin').textContent='';
-  state.hoTen=hoTen; state.lop=lop;
-  batDauLamBai();
-}
-
-/* ---------- MÀN HÌNH: LÀM BÀI ---------- */
-function batDauLamBai(){
-  state.dsCau=buildDeThi();
-  state.cauHienTai=0; state.traLoi={}; state.daNop=false; state.ketQua=null;
-  state.batDau=Date.now();
-  state.conLai=CONFIG.GIOI_HAN_PHUT*60;
-  clearInterval(state.timerId);
-  state.timerId=setInterval(capNhatDongHo,1000);
-  capNhatDongHo();
-  $('luoi-cau-hoi').classList.remove('mo');
-  $('nut-luoi-cau').classList.remove('mo');
-  veCauHoi();
-  hienManHinh('man-hinh-lam-bai');
-}
-function capNhatDongHo(){
-  $('dong-ho-so').textContent=giayThanhChu(state.conLai);
-  $('dong-ho').classList.toggle('het-gio', state.conLai<=300);
-  if(state.conLai<=0){ clearInterval(state.timerId); nopBai(true); return; }
-  state.conLai--;
-}
-function cauDangLam(){ return state.dsCau[state.cauHienTai]; }
-function daTraLoi(c){
-  const tl=state.traLoi[c.id];
-  if(!tl) return false;
-  if(c.loai==='tracnghiem') return tl.chon!==null && tl.chon!==undefined;
-  return tl.y.every(x=>x!==null);
-}
-
-function veCauHoi(){
-  const c=cauDangLam(), tong=state.dsCau.length, i=state.cauHienTai;
-  $('ten-phan').textContent = c.phan===1 ? 'Phần I — Trắc nghiệm' : 'Phần II — Đúng / Sai';
-  $('tien-do-chu').textContent='Câu '+(i+1)+' / '+tong;
-  $('thanh-tien-do').style.width=((i+1)/tong*100)+'%';
-  const tl=state.traLoi[c.id];
-  const ngay=CONFIG.HIEN_DAP_AN==='ngay';
-  let html='<div class="q-meta"><span class="q-chip'+(c.phan===2?' q-phan2':'')+'">Câu '+(i+1)+'</span>'
-         +'<span class="q-mucdo">'+thoatHTML(c.bai)+' · '+tenMucDo(c.mucDo)+'</span></div>'
-         +'<div class="q-noidung">'+thoatHTML(c.noiDung)+'</div>';
-
-  if(c.loai==='tracnghiem'){
-    const chu=['A','B','C','D'];
-    c.luaChon.forEach((lc,idx)=>{
-      let cls='opt';
-      if(tl&&tl.chon===idx) cls+=' chon';
-      if(ngay&&tl&&tl.khoa){
-        cls+=' khoa';
-        if(idx===c.dapAn) cls+=' dung';
-        else if(tl.chon===idx) cls+=' sai';
-      }
-      html+='<button class="'+cls+'" data-idx="'+idx+'"><span class="opt-letter">'+chu[idx]+'</span><span>'+thoatHTML(lc)+'</span></button>';
-    });
-  }else{
-    c.y.forEach((y,idx)=>{
-      const chon=tl?tl.y[idx]:null;
-      let cls='ds-y';
-      if(ngay&&tl&&tl.khoa){ cls+=((chon===y.dung)?' dung':' sai'); }
-      html+='<div class="'+cls+'"><div class="ds-text">'+thoatHTML(y.noiDung)+'</div><div class="ds-btns">'
-          +'<button class="ds-btn'+(chon===true?' chon-dung':'')+'" data-y="'+idx+'" data-v="1">Đúng</button>'
-          +'<button class="ds-btn'+(chon===false?' chon-sai':'')+'" data-y="'+idx+'" data-v="0">Sai</button>'
-          +'</div></div>';
-    });
-  }
-  $('the-cau-hoi').innerHTML=html;
-
-  $('the-cau-hoi').querySelectorAll('.opt').forEach(b=>{
-    b.addEventListener('click',()=>{
-      if(ngay&&state.traLoi[c.id]&&state.traLoi[c.id].khoa) return;
-      state.traLoi[c.id]={chon:parseInt(b.getAttribute('data-idx')),khoa:ngay};
-      veCauHoi(); veLuoi();
-    });
-  });
-  $('the-cau-hoi').querySelectorAll('.ds-btn').forEach(b=>{
-    b.addEventListener('click',()=>{
-      if(ngay&&state.traLoi[c.id]&&state.traLoi[c.id].khoa) return;
-      const yi=parseInt(b.getAttribute('data-y')), v=b.getAttribute('data-v')==='1';
-      if(!state.traLoi[c.id]) state.traLoi[c.id]={y:[null,null,null,null],khoa:false};
-      state.traLoi[c.id].y[yi]=v;
-      if(ngay&&state.traLoi[c.id].y.every(x=>x!==null)) state.traLoi[c.id].khoa=true;
-      veCauHoi(); veLuoi();
-    });
-  });
-
-  $('nut-quay-lai').disabled=(i===0);
-  $('nut-tiep-theo').textContent=(i===tong-1)?'Nộp bài':'Câu tiếp ›';
-  veLuoi();
-}
-
-/* ---------- LƯỚI ĐIỀU HƯỚNG 28 CÂU ---------- */
-function veLuoi(){
-  let html='';
-  state.dsCau.forEach((c,i)=>{
-    let cls='p-cell';
-    if(daTraLoi(c)) cls+=' lam';
-    if(i===state.cauHienTai) cls+=' hien-tai';
-    html+='<button class="'+cls+'" data-i="'+i+'">'+(i+1)+'</button>';
-  });
-  $('luoi-o-cau').innerHTML=html;
-  $('luoi-o-cau').querySelectorAll('.p-cell').forEach(b=>{
-    b.addEventListener('click',()=>{
-      state.cauHienTai=parseInt(b.getAttribute('data-i'));
-      $('luoi-cau-hoi').classList.remove('mo');
-      $('nut-luoi-cau').classList.remove('mo');
-      veCauHoi();
-    });
-  });
-}
-function soCauChuaLam(){
-  return state.dsCau.filter(c=>!daTraLoi(c)).length;
-}
-function xacNhanNop(){
-  const thieu=soCauChuaLam();
-  if(thieu>0){
-    if(!confirm('Em còn '+thieu+' câu chưa trả lời. Vẫn nộp bài chứ?')) return;
-  }else{
-    if(!confirm('Em đã làm hết 28 câu. Nộp bài nhé?')) return;
-  }
-  nopBai(false);
-}
-
-/* ---------- CHẤM ĐIỂM (TN: 0,25đ/câu · ĐS: 0,25đ/ý) ---------- */
-function chamDiem(){
-  let d1=0, d2=0; const chiTiet=[]; const theoChuDe={};
-  state.dsCau.forEach(c=>{
-    const tl=state.traLoi[c.id];
-    let diem=0, dungHoanToan=false; const yKetQua=[];
-    if(c.loai==='tracnghiem'){
-      dungHoanToan=tl&&tl.chon===c.dapAn;
-      diem=dungHoanToan?0.25:0; d1=lamTron(d1+diem);
-    }else{
-      let dungY=0;
-      c.y.forEach((y,idx)=>{
-        const ok=tl&&tl.y[idx]===y.dung;
-        if(ok) dungY++;
-        yKetQua.push({noiDung:y.noiDung,dung:y.dung,chon:tl?tl.y[idx]:null,ok:!!ok});
-      });
-      diem=lamTron(dungY*0.25); dungHoanToan=(dungY===4); d2=lamTron(d2+diem);
-    }
-    if(!theoChuDe[c.chuDe]) theoChuDe[c.chuDe]={duoc:0,tong:0};
-    theoChuDe[c.chuDe].duoc=lamTron(theoChuDe[c.chuDe].duoc+diem);
-    theoChuDe[c.chuDe].tong=lamTron(theoChuDe[c.chuDe].tong+(c.loai==='tracnghiem'?0.25:1));
-    chiTiet.push({cau:c,diem:diem,dungHoanToan:dungHoanToan,chon:tl?tl.chon:null,yKetQua:yKetQua});
-  });
-  return {d1:lamTron(d1), d2:lamTron(d2), tong:lamTron(d1+d2), chiTiet:chiTiet, theoChuDe:theoChuDe};
-}
-function nopBai(hetGio){
-  if(state.daNop) return;
-  state.daNop=true;
-  clearInterval(state.timerId);
-  const kq=chamDiem();
-  const giayLam=Math.floor((Date.now()-state.batDau)/1000);
-  const ma='CN12-'+Date.now().toString(36).slice(-4).toUpperCase()
-           +Math.random().toString(36).slice(2,4).toUpperCase();
-  state.ketQua={
-    hoTen:state.hoTen, lop:state.lop, bai:'Kiểm tra giữa kỳ I (theo ma trận)',
-    diem:kq.tong, diemPhan1:kq.d1, diemPhan2:kq.d2, tongSoCau:state.dsCau.length,
-    thoiGianGiay:giayLam, thoiGianChu:giayThanhChu(giayLam),
-    maKetQua:ma, thoiDiemNop:new Date().toISOString(),
-    maCauSai:kq.chiTiet.filter(x=>!x.dungHoanToan).map(x=>x.cau.id),
-    chiTiet:kq.chiTiet, theoChuDe:kq.theoChuDe, hetGio:!!hetGio
-  };
-  veKetQua();
-  hienManHinh('man-hinh-ket-qua');
-  guiKetQua();
-}
-
-/* ---------- MÀN HÌNH KẾT QUẢ ---------- */
-function veKetQua(){
-  const kq=state.ketQua;
-  $('diem-so').textContent=kq.diem;
-  const C=402.1;
-  $('vong-diem').style.strokeDashoffset=C*(1-kq.diem/10);
-  $('vong-diem').setAttribute('stroke',kq.diem>=8?'#2E7D32':(kq.diem>=5?'#0288D1':'#D32F2F'));
-  $('diem-phan-1').textContent=kq.diemPhan1+'đ';
-  $('diem-phan-2').textContent=kq.diemPhan2+'đ';
-
-  const dungHT=kq.chiTiet.filter(x=>x.dungHoanToan).length;
-  $('tom-tat-ket-qua').innerHTML=
-    '<div class="ket-qua-dong">Đúng hoàn toàn '+dungHT+' / '+kq.tongSoCau+' câu</div>'
-    +'<p class="muted">Thời gian làm bài: '+kq.thoiGianChu+(kq.hetGio?' (hết giờ)':'')+' · '+thoatHTML(kq.hoTen)+' · Lớp '+thoatHTML(kq.lop)+'</p>';
-
-  let yeuNhat=null, tiLeThap=2;
-  Object.keys(kq.theoChuDe).forEach(cd=>{
-    const t=kq.theoChuDe[cd], tiLe=t.tong>0?t.duoc/t.tong:1;
-    if(tiLe<1&&tiLe<tiLeThap){ tiLeThap=tiLe; yeuNhat=cd; }
-  });
-  let loi='';
-  const d=kq.diem;
-  if(d>=9)      loi='Tuyệt vời! Em nắm bài rất chắc. Hãy giữ vững phong độ này nhé!';
-  else if(d>=8) loi='Giỏi lắm! Em đã hiểu bài tốt, chỉ cần rà soát lại vài chỗ nhỏ nữa là hoàn hảo.';
-  else if(d>=6.5) loi='Khá tốt đấy! Em đã nắm được phần lớn kiến thức, cố thêm một chút nữa nhé.';
-  else if(d>=5) loi='Em đã cố gắng rồi! Hãy xem lại đáp án và giải thích bên dưới, rồi làm đề mới một lượt nữa nhé.';
-  else          loi='Đừng nản nhé! Điểm số chỉ là bước đầu. Em hãy đọc kỹ phần giải thích từng câu, ôn lại bài rồi thử đề mới — cô tin em sẽ tiến bộ nhanh thôi.';
-  $('loi-nhan-xet').textContent=loi;
-  if(yeuNhat){
-    $('goi-y-on-lai').style.display='block';
-    $('goi-y-on-lai').innerHTML='<b>Gợi ý cho em:</b> nên ôn lại phần <b>"'+thoatHTML(yeuNhat)+'"</b> trong sách giáo khoa nhé.';
-  }else{ $('goi-y-on-lai').style.display='none'; }
-
-  let html='', phanHienTai=0;
-  kq.chiTiet.forEach((x,i)=>{
-    const c=x.cau;
-    if(c.phan!==phanHienTai){
-      phanHienTai=c.phan;
-      html+='<h3 class="section-title" style="margin-top:6px">'
-          +(phanHienTai===1?'Phần I — Trắc nghiệm nhiều lựa chọn':'Phần II — Trắc nghiệm đúng/sai')+'</h3>';
-    }
-    html+='<div class="review"><div class="review-head"><span class="badge '+(x.dungHoanToan?'dung':'sai')+'">'
-        +(x.dungHoanToan?'Đúng':'Chưa đúng')+'</span><span>Câu '+(i+1)+': '+thoatHTML(c.noiDung)+'</span></div>';
-    if(c.loai==='tracnghiem'){
-      const chu=['A','B','C','D'];
-      html+='<div class="dap-an">Em chọn: <b>'+(x.chon===null||x.chon===undefined?'— chưa trả lời —':chu[x.chon]+'. '+thoatHTML(c.luaChon[x.chon]))+'</b>'
-          +'<br>Đáp án đúng: <b style="color:var(--xanh-rung)">'+chu[c.dapAn]+'. '+thoatHTML(c.luaChon[c.dapAn])+'</b></div>';
-    }else{
-      x.yKetQua.forEach(y=>{
-        const mau=y.ok?'var(--xanh-rung)':'var(--sai)';
-        html+='<div class="ds-review" style="color:'+mau+'"><b>'+(y.ok?'✓':'✗')+'</b> '+thoatHTML(y.noiDung)
-            +' <span class="muted">(Em: '+(y.chon===null?'chưa chọn':(y.chon?'Đúng':'Sai'))+' · Đáp án: '+(y.dung?'Đúng':'Sai')+')</span></div>';
-      });
-    }
-    html+='<div class="giai-thich"><b>Giải thích:</b> '+thoatHTML(c.giaiThich)+'</div></div>';
-  });
-  $('chi-tiet-cau').innerHTML=html;
-
-  $('ma-ket-qua').textContent=kq.maKetQua;
-  $('nut-lam-lai').style.display=CONFIG.CHO_PHEP_LAM_LAI?'':'none';
-}
-
-/* ---------- GỬI KẾT QUẢ VỀ GOOGLE SHEETS ---------- */
-function payloadGui(){
-  const kq=state.ketQua;
-  return {
-    hoTen:kq.hoTen, lop:kq.lop, bai:kq.bai, diem:kq.diem,
-    thoiGianLamGiay:kq.thoiGianGiay, thoiGianLam:kq.thoiGianChu,
-    maCauSai:kq.maCauSai.join(', '), tongSoCau:kq.tongSoCau,
-    thoiDiemNop:kq.thoiDiemNop, maKetQua:kq.maKetQua
-  };
-}
-function datTrangThaiGui(loai,chu){
-  const el=$('trang-thai-gui');
-  el.className='send-status '+loai; el.textContent=chu;
-}
-function luuChoGui(payload){
+function maDeURL(){
   try{
-    const k='cn12_ketqua_cho_gui';
-    const ds=JSON.parse(localStorage.getItem(k)||'[]');
-    ds.push(payload);
-    localStorage.setItem(k,JSON.stringify(ds));
+    var m=new URLSearchParams(location.search).get("made");
+    return m==="GK1"?m:"";
+  }catch(e){ return ""; }
+}
+
+/* ================= GỌI API (không dùng no-cors) ================= */
+async function goiAPI(payload, quaGet, timeoutMs){
+  if(!APPS_SCRIPT_URL) throw new Error("Giáo viên chưa cấu hình địa chỉ máy chủ.");
+  var url = APPS_SCRIPT_URL, opt;
+  if(quaGet){
+    var qs = Object.keys(payload).map(k=>encodeURIComponent(k)+"="+encodeURIComponent(payload[k])).join("&");
+    url += (url.indexOf("?")>=0?"&":"?")+qs; opt={method:"GET"};
+  }else{
+    opt={method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"},
+         body:JSON.stringify(payload)};
+  }
+  /* Không dùng mode no-cors: cần đọc phản hồi thật để xác nhận đã lưu */
+  var ctrl = ("AbortController" in window) ? new AbortController() : null;
+  var timer = null;
+  if(ctrl){
+    opt.signal = ctrl.signal;
+    timer = setTimeout(function(){ ctrl.abort(); }, timeoutMs||25000);
+  }
+  var res;
+  try{
+    res = await fetch(url, opt);
+  }catch(e){
+    if(e && e.name==="AbortError") throw new Error("Hết thời gian chờ máy chủ (25 giây). Kiểm tra mạng rồi gửi lại.");
+    throw e;
+  }finally{ if(timer) clearTimeout(timer); }
+  if(!res.ok) throw new Error("Máy chủ trả lỗi "+res.status);
+  var data = await res.json();
+  if(!data || data.ok!==true){
+    var err = new Error((data&&data.loi)||"Máy chủ không xác nhận.");
+    err.data = data||{}; /* giữ congBoLuc, thongBao... để hiển thị */
+    throw err;
+  }
+  return data;
+}
+
+/* ================= LUỒNG BẮT ĐẦU ================= */
+function maHocSinh(lop, stt){
+  var n=parseInt(stt,10);
+  return lop+"-"+(n<10?"0":"")+n;
+}
+function capNhatMaHS(){
+  var lop=$("o-lop").value, stt=parseInt($("o-stt").value,10);
+  $("xem-ma-hs").textContent = (lop && stt>=1 && stt<=99)
+    ? "Mã học sinh: "+maHocSinh(lop,stt) : "Mã học sinh: —";
+}
+async function vaoLamBai(moi){
+  var hoTen=$("o-ho-ten").value.normalize("NFC").trim().replace(/\s+/g," ");
+  var lop=$("o-lop").value, sttChu=String($("o-stt").value).trim(), stt=parseInt(sttChu,10);
+  if(hoTen.length<2){ $("loi-thong-tin").textContent="Em nhập họ tên đầy đủ nhé."; return; }
+  if(LOP_HOP_LE.indexOf(lop)<0){ $("loi-thong-tin").textContent="Em chọn lớp nhé."; return; }
+  if(!/^\d{1,2}$/.test(sttChu)||!(stt>=1&&stt<=99)){ $("loi-thong-tin").textContent="Số thứ tự phải là số nguyên từ 1 đến 99."; return; }
+  $("loi-thong-tin").textContent="";
+  $("nut-vao-lam-bai").disabled=true;
+  try{
+    var kq = await goiAPI({action:"batDau", maDe:state.maDe, lop:lop,
+                           soThuTu:stt, hoTen:hoTen});
+    state.attemptId=kq.attemptId; state.accessCode=kq.accessCode;
+    state.hoTen=hoTen; state.lop=lop; state.soThuTu=stt;
+    state.maHS=kq.maHocSinh; state.cheDo=kq.cheDo;
+    state.hanNop=kq.hanNop; state.lechGio=kq.serverNow-Date.now();
+    state.cauHoi=kq.cauHoi; state.cauHienTai=0; state.traLoi={}; state.daNop=false;
+    luuDangLam();
+    batDauLamBai();
+  }catch(e){
+    $("loi-thong-tin").textContent=e.message||"Không bắt đầu được. Kiểm tra mạng rồi thử lại.";
+  }finally{ $("nut-vao-lam-bai").disabled=false; }
+}
+/* B7/B10: tách 3 loại thông tin — lượt đang làm, bài chờ gửi (đã chốt),
+   biên nhận đã nộp. Không tra kết quả chỉ bằng mã học sinh: biên nhận giữ
+   mã truy cập của đúng lượt làm. */
+function luuDangLam(){
+  try{
+    localStorage.setItem(KHO_CN+"danglam", JSON.stringify({
+      attemptId:state.attemptId, accessCode:state.accessCode, maDe:state.maDe,
+      hoTen:state.hoTen, lop:state.lop, soThuTu:state.soThuTu, maHS:state.maHS,
+      hanNop:state.hanNop, cheDo:state.cheDo }));
+    return true;
+  }catch(e){ return false; }
+}
+function docDangLam(){
+  try{
+    var l=JSON.parse(localStorage.getItem(KHO_CN+"danglam")||"null");
+    if(l&&l.attemptId&&l.accessCode) return l;
+  }catch(e){}
+  return null;
+}
+function xoaDangLam(){ try{ localStorage.removeItem(KHO_CN+"danglam"); }catch(e){} }
+/* Hàng đợi bài chờ gửi, khóa theo mã lượt: bài chờ của lượt trước không bị
+   lượt sau ghi đè khi học sinh làm tiếp đề khác lúc còn mất mạng. */
+function docDsCho(){
+  var ds={};
+  try{
+    var m=JSON.parse(localStorage.getItem(KHO_CN+"cho_ds")||"{}");
+    if(m&&typeof m==="object"&&!Array.isArray(m)) ds=m;
+  }catch(e){}
+  try{ /* tương thích bản trước: một bài chờ duy nhất */
+    var c=JSON.parse(localStorage.getItem(KHO_CN+"cho")||"null");
+    if(c&&c.attemptId&&c.answers&&!ds[c.attemptId]) ds[c.attemptId]=c;
+  }catch(e){}
+  Object.keys(ds).forEach(function(k){
+    var c=ds[k]; if(!(c&&c.attemptId===k&&c.accessCode&&c.answers)) delete ds[k];
+  });
+  return ds;
+}
+function khoaPhieuCho(){
+  /* Chốt phiếu TRƯỚC khi gửi: bản đã khóa, gửi lại dùng đúng nội dung này */
+  var ds=docDsCho();
+  var cho = ds[state.attemptId] || { attemptId:state.attemptId, accessCode:state.accessCode,
+    maDe:state.maDe, maHS:state.maHS,
+    answers:JSON.parse(JSON.stringify(state.traLoi)), ts:Date.now() };
+  ds[cho.attemptId]=cho;
+  try{
+    localStorage.setItem(KHO_CN+"cho_ds", JSON.stringify(ds));
+    localStorage.removeItem(KHO_CN+"cho");
+    return {ok:true, cho:cho};
+  }catch(e){ return {ok:false, cho:cho}; } /* bộ nhớ lỗi: vẫn giữ bản trong RAM */
+}
+function docCho(attemptId){
+  var ds=docDsCho();
+  if(attemptId) return ds[attemptId]||null;
+  var k=Object.keys(ds).sort(function(a,b){ return (ds[a].ts||0)-(ds[b].ts||0); });
+  return k.length?ds[k[0]]:null;
+}
+function xoaCho(attemptId){
+  try{
+    var ds=docDsCho(); delete ds[attemptId];
+    localStorage.setItem(KHO_CN+"cho_ds", JSON.stringify(ds));
+    localStorage.removeItem(KHO_CN+"cho");
   }catch(e){}
 }
-async function guiMotKetQua(payload){
-  const res=await fetch(CONFIG.APPS_SCRIPT_URL,{
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(payload)
-  });
-  await res.text();
-  if(!res.ok) throw new Error('Máy chủ trả lỗi '+res.status);
-}
-async function guiKetQua(){
-  const payload=payloadGui();
-  $('nut-gui-lai').style.display='none';
-  if(!CONFIG.APPS_SCRIPT_URL){
-    datTrangThaiGui('loi','Giáo viên chưa cấu hình địa chỉ gửi. Kết quả đã lưu tạm trên máy này — em nhớ chụp màn hình mã kết quả nhé.');
-    luuChoGui(payload);
-    $('nut-gui-lai').style.display='block';
-    return;
-  }
-  datTrangThaiGui('dang','Đang gửi kết quả cho giáo viên...');
+function themBienNhan(bn){
   try{
-    await guiMotKetQua(payload);
-    datTrangThaiGui('ok','Đã gửi kết quả thành công cho giáo viên.');
-  }catch(e){
-    luuChoGui(payload);
-    datTrangThaiGui('loi','Chưa gửi được (mất mạng hoặc lỗi kết nối). Kết quả đã lưu tạm trên máy — em bấm "Gửi lại" khi có mạng, hoặc chụp màn hình mã kết quả để nộp.');
-    $('nut-gui-lai').style.display='block';
+    var arr=[]; try{ arr=JSON.parse(localStorage.getItem(KHO_CN+"biennhan")||"[]"); }catch(e){}
+    arr=arr.filter(function(x){ return x.attemptId!==bn.attemptId; });
+    arr.unshift(bn); arr=arr.slice(0,20);
+    localStorage.setItem(KHO_CN+"biennhan", JSON.stringify(arr)); return true;
+  }catch(e){ return false; }
+}
+function docBienNhan(){
+  try{ var a=JSON.parse(localStorage.getItem(KHO_CN+"biennhan")||"[]"); return Array.isArray(a)?a:[]; }
+  catch(e){ return []; }
+}
+function luuPhieu(){
+  /* Phiếu nháp của lượt đang làm (chưa chốt) */
+  try{ localStorage.setItem(KHO_CN+"phieu_"+state.attemptId, JSON.stringify(state.traLoi)); return true; }
+  catch(e){ return false; }
+}
+function xoaPhieuNhap(attemptId){ try{ localStorage.removeItem(KHO_CN+"phieu_"+attemptId); }catch(e){} }
+
+/* ================= MÀN HÌNH LÀM BÀI ================= */
+function batDauLamBai(){
+  $("lam-bai-made").textContent="Mã đề "+state.maDe+" · "+(state.cheDo==="kiem_tra"?"Kiểm tra":"Ôn tập");
+  $("lam-bai-hs").textContent=state.hoTen+" · "+state.maHS;
+  $("luoi-wrap").style.display="block";
+  clearInterval(state.timerId);
+  state.timerId=setInterval(capNhatDongHo,1000); capNhatDongHo();
+  veCauHoi(); veLuoi();
+  hienManHinh("man-lam-bai");
+}
+function conLaiGiay(){
+  return Math.max(0, Math.floor((state.hanNop-(Date.now()+state.lechGio))/1000));
+}
+function capNhatDongHo(){
+  var cl=conLaiGiay();
+  $("dong-ho").textContent=giayThanhChu(cl);
+  $("dong-ho").classList.toggle("sap-het", cl<=300);
+  if(cl<=0){ clearInterval(state.timerId); nopBai(true); }
+}
+function cauDangLam(){ return state.cauHoi[state.cauHienTai]; }
+function daTraLoi(c){
+  var tl=state.traLoi[c.maCau];
+  if(tl===undefined||tl===null) return false;
+  if(c.dang==="TN") return tl!==""&&tl!==null&&tl!==undefined;
+  if(c.dang==="DS") return Array.isArray(tl)&&tl.length===4&&tl.every(x=>x===true||x===false);
+  return String(tl||"").trim().length>0;
+}
+/* Cùng quy tắc với máy chủ (parseTapSo): "1,4" = "4;1" = "1 4";
+   "14", "1,,4", "1,4,abc", "1,4,0" không hợp lệ. Trả null nếu sai. */
+function parseTapSo(s, toiDa){
+  var str=String(s==null?"":s).trim();
+  if(!str) return null;
+  var parts=str.split(/\s*[,;]\s*|\s+/), seen={}, out=[];
+  for(var i=0;i<parts.length;i++){
+    if(!/^\d+$/.test(parts[i])) return null;
+    var n=parseInt(parts[i],10);
+    if(n<1||n>(toiDa||99)) return null;
+    if(!seen[n]){ seen[n]=true; out.push(n); }
+  }
+  return out.length?out.sort(function(a,b){return a-b;}):null;
+}
+function tlnSaiDinhDang(c, tl){
+  if(c.dang!=="TLN_set") return false;
+  var s=String(tl==null?"":tl).trim();
+  if(!s) return false; /* bỏ trống: không phải lỗi định dạng */
+  return !parseTapSo(s, (c.cacY&&c.cacY.length)||99);
+}
+function chuY(kyHieu, idx){
+  /* Ý Đ/S hiển thị a, b, c, d như đề gốc */
+  return "abcd".charAt(idx)||String(kyHieu||"");
+}
+function noiDungY(y){
+  /* Ngân hàng lưu "a. nội dung": bỏ tiền tố để không hiện trùng "1. a." */
+  return String(y.noiDung||"").replace(/^[a-dA-D][.)]\s*/,"");
+}
+function tenDang(d){
+  return d==="TN"?"Trắc nghiệm":(d==="DS"?"Đúng / Sai":"Trả lời ngắn");
+}
+function veCauHoi(){
+  var c=cauDangLam(), tong=state.cauHoi.length, i=state.cauHienTai;
+  if(!c) return;
+  $("tien-do-chu").textContent="Câu "+(i+1)+" / "+tong+" · "+tenDang(c.dang);
+  $("thanh-tien-do").style.width=((i+1)/tong*100)+"%";
+  var tl=state.traLoi[c.maCau];
+  var html='<div class="q-meta"><span class="q-chip">Câu '+(i+1)+'</span>'
+    +'<span class="q-mucdo">'+thoatHTML(c.bai||"")+' · '+tenDang(c.dang)+'</span></div>'
+    +'<div class="q-noidung">'+thoatHTML(c.noiDung)+'</div>';
+  if(c.maHinh){
+    html+='<img class="q-hinh" id="hinh-cau-hoi" alt="Hình minh họa" style="display:none">';
+  }
+  if(c.dang==="TN"){
+    var chu=["A","B","C","D"];
+    c.luaChon.forEach(function(lc,idx){
+      var cls="opt"+(tl===idx?" chon":"");
+      html+='<button class="'+cls+'" data-idx="'+idx+'"><span class="opt-letter">'+chu[idx]
+        +'</span><span>'+thoatHTML(lc)+'</span></button>';
+    });
+  }else if(c.dang==="DS"){
+    c.cacY.forEach(function(y,idx){
+      var chon=Array.isArray(tl)?tl[idx]:null;
+      html+='<div class="ds-y"><div class="ds-text"><b>'+thoatHTML(chuY(y.kyHieu,idx))+'.</b> '
+        +thoatHTML(noiDungY(y))+'</div><div class="ds-btns">'
+        +'<button class="ds-btn'+(chon===true?" chon-dung":"")+'" data-y="'+idx+'" data-v="1">Đúng</button>'
+        +'<button class="ds-btn'+(chon===false?" chon-sai":"")+'" data-y="'+idx+'" data-v="0">Sai</button>'
+        +'</div></div>';
+    });
+  }else{ /* TLN_text, TLN_set */
+    if(c.dang==="TLN_set" && c.cacY && c.cacY.length){
+      /* B1: hiển thị đủ 4 nhận định đánh số 1-4 trước ô trả lời */
+      html+='<div class="ds-nhan-dinh">';
+      c.cacY.forEach(function(y){
+        html+='<div class="nd-item"><span class="nd-so">'+thoatHTML(y.kyHieu)
+          +'</span><span>'+thoatHTML(y.noiDung)+'</span></div>';
+      });
+      html+='</div>';
+    }
+    var goiY = c.dang==="TLN_set" ? "Nhập các số của nhận định đúng, cách nhau bằng dấu phẩy, chấm phẩy hoặc khoảng trắng (VD: 1, 4)." : "Viết ngắn gọn đáp án của em.";
+    html+='<input class="tln-input" id="o-tln" type="text" placeholder="VD: 1, 4" value="'
+      +thoatHTML(tl||"")+'" maxlength="120" autocomplete="off" inputmode="numeric"'
+      +(state.khoaPhieu?' disabled':'')+'>'
+      +'<div class="tl-hint">'+goiY+'</div>'
+      +'<div class="tln-canh-bao" id="tln-canh-bao"></div>';
+  }
+  $("the-cau-hoi").innerHTML=html;
+  if(c.maHinh) taiHinh(c.maHinh);
+  $("the-cau-hoi").querySelectorAll(".opt").forEach(function(b){
+    b.addEventListener("click",function(){
+      state.traLoi[c.maCau]=parseInt(b.getAttribute("data-idx"),10);
+      luuPhieu(); veCauHoi(); veLuoi();
+    });
+  });
+  $("the-cau-hoi").querySelectorAll(".ds-btn").forEach(function(b){
+    b.addEventListener("click",function(){
+      var yi=parseInt(b.getAttribute("data-y"),10), v=b.getAttribute("data-v")==="1";
+      if(!Array.isArray(state.traLoi[c.maCau])) state.traLoi[c.maCau]=[null,null,null,null];
+      state.traLoi[c.maCau][yi]=v;
+      luuPhieu(); veCauHoi(); veLuoi();
+    });
+  });
+  var oTln=$("o-tln");
+  if(oTln){
+    var canhBao=function(){
+      $("tln-canh-bao").textContent=tlnSaiDinhDang(c,oTln.value)
+        ? "Chưa đúng cách viết: chỉ dùng các số 1–"+((c.cacY&&c.cacY.length)||4)+", mỗi số một lần, ngăn cách bằng dấu phẩy (VD: 1, 4). Viết “14” sẽ không được tính là 1 và 4."
+        : "";
+    };
+    canhBao();
+    oTln.addEventListener("input",function(){
+      if(state.khoaPhieu) return;
+      state.traLoi[c.maCau]=oTln.value; luuPhieu(); veLuoi(); canhBao();
+    });
   }
 }
-async function guiLai(){
-  $('nut-gui-lai').style.display='none';
-  datTrangThaiGui('dang','Đang gửi lại...');
-  const k='cn12_ketqua_cho_gui';
-  let ds=[];
-  try{ ds=JSON.parse(localStorage.getItem(k)||'[]'); }catch(e){}
-  ds.push(payloadGui());
-  const conLai=[];
-  for(const p of ds){
-    try{ await guiMotKetQua(p); }
-    catch(e){ conLai.push(p); }
+async function taiHinh(maHinh){
+  var img=$("hinh-cau-hoi");
+  if(!img) return;
+  try{
+    var data=await goiAPI({action:"hinh", attemptId:state.attemptId,
+      code:state.accessCode, hinhId:maHinh}, true);
+    img.src="data:"+data.mime+";base64,"+data.base64;
+    img.style.display="block";
+  }catch(e){ /* không chặn làm bài nếu hình lỗi */ }
+}
+function veLuoi(){
+  var g=$("luoi-cau-hoi"); if(!g) return;
+  var html="";
+  state.cauHoi.forEach(function(c,i){
+    var cls="o-luoi"+(daTraLoi(c)?" da-lam":"")+(i===state.cauHienTai?" hien-tai":"");
+    html+='<button class="'+cls+'" data-i="'+i+'">'+(i+1)+'</button>';
+  });
+  g.innerHTML=html;
+  g.querySelectorAll(".o-luoi").forEach(function(b){
+    b.addEventListener("click",function(){
+      state.cauHienTai=parseInt(b.getAttribute("data-i"),10);
+      veCauHoi(); veLuoi(); window.scrollTo(0,0);
+    });
+  });
+}
+/* ================= NỘP BÀI ================= */
+function xacNhanNop(){
+  var lam=state.cauHoi.filter(daTraLoi).length;
+  var sai=[];
+  state.cauHoi.forEach(function(c,i){ if(tlnSaiDinhDang(c,state.traLoi[c.maCau])) sai.push(i+1); });
+  $("hop-xac-nhan-noi-dung").textContent=
+    "Em đã làm "+lam+" / "+state.cauHoi.length+" câu."+
+    (sai.length?" Câu "+sai.join(", ")+" viết sai cách nhập số nên sẽ không được tính điểm.":"")+
+    " Nộp bài ngay?";
+  $("hop-xac-nhan").showModal();
+}
+async function nopBai(tuDong){
+  if(state.daNop||state.dangGui) return;
+  var khoa = khoaPhieuCho(); /* B10: lưu bản phiếu đã chốt TRƯỚC khi gửi */
+  state.khoaPhieu = true; state.choHienTai = khoa.cho;
+  state.choLuuDuoc = khoa.ok;
+  hienManHinh("man-ket-qua");
+  $("kq-made").textContent="Mã đề "+state.maDe;
+  $("nut-gui-lai").style.display="none"; $("kq-diem-wrap").style.display="none";
+  $("kq-chi-tiet").innerHTML=""; $("nut-tai-ban-sao").style.display="none";
+  if(!khoa.ok){
+    /* B10: không khẳng định "giữ trên máy này" khi bộ nhớ lỗi */
+    datTrangThai("cho","Không lưu được bài chờ trên máy này (bộ nhớ đầy hoặc bị chặn).");
+    $("kq-mo-ta").textContent="Em tải bản sao phiếu trả lời bên dưới để giữ lại, rồi bấm Gửi lại. "+
+      "Nếu vẫn lỗi, liên hệ giáo viên và đọc mã lượt làm cho thầy/cô.";
+    $("nut-tai-ban-sao").style.display="block";
   }
-  try{ localStorage.setItem(k,JSON.stringify(conLai)); }catch(e){}
-  if(conLai.length===0) datTrangThaiGui('ok','Đã gửi thành công tất cả kết quả còn tồn.');
-  else{
-    datTrangThaiGui('loi','Vẫn chưa gửi được. Kết quả đang lưu tạm trên máy — em thử lại sau hoặc chụp màn hình mã kết quả.');
-    $('nut-gui-lai').style.display='block';
-  }
+  await guiCho(khoa.cho, tuDong, !khoa.ok);
 }
 
-/* ---------- KHỞI ĐỘNG ---------- */
-document.addEventListener('DOMContentLoaded',()=>{
-  veOChonLop();
-  $('nut-bat-dau').addEventListener('click',()=>hienManHinh('man-hinh-thong-tin'));
-  $('nut-tro-ve-chinh').addEventListener('click',()=>hienManHinh('man-hinh-chinh'));
-  $('nut-vao-lam-bai').addEventListener('click',vaoLamBai);
-  $('nut-luoi-cau').addEventListener('click',()=>{
-    $('luoi-cau-hoi').classList.toggle('mo');
-    $('nut-luoi-cau').classList.toggle('mo');
+/* Gửi (lại) bản phiếu đã chốt: cùng mã lượt + cùng nội dung (B10) */
+async function guiCho(cho, tuDong, daBaoLoiLuu){
+  if(state.dangGui) return;
+  if(!cho){ cho=state.choHienTai||docCho(); if(!cho) return; }
+  state.choHienTai=cho;
+  state.dangGui=true;
+  hienManHinh("man-ket-qua");
+  $("kq-made").textContent="Mã đề "+(cho.maDe||state.maDe||"");
+  datTrangThai("cho","Đang gửi bài…");
+  $("nut-gui-lai").style.display="none";
+  try{
+    var kq=await goiAPI({action:"nopBai", attemptId:cho.attemptId,
+      accessCode:cho.accessCode, answers:cho.answers});
+    /* CHỈ hiển thị "Đã lưu" khi máy chủ xác nhận cả pipeline cho ĐÚNG lượt này */
+    if(kq.saved!==true || String(kq.attemptId)!==String(cho.attemptId)){
+      var loiXN=new Error("Máy chủ chưa xác nhận đã lưu đúng lượt làm này.");
+      loiXN.data=kq; throw loiXN;
+    }
+    state.daNop=true; state.attemptId=cho.attemptId; state.accessCode=cho.accessCode;
+    datTrangThai("ok","Đã lưu vào bảng của giáo viên.");
+    $("kq-mo-ta").textContent="Mã lượt làm: "+cho.attemptId+(tuDong?" (tự động nộp khi hết giờ)":"");
+    themBienNhan({attemptId:cho.attemptId, accessCode:cho.accessCode, maDe:cho.maDe,
+      maHS:cho.maHS||"", ts:Date.now()}); /* B7: giữ biên nhận để xem lại sau */
+    xoaCho(cho.attemptId); xoaPhieuNhap(cho.attemptId);
+    var dl=docDangLam(); if(dl&&dl.attemptId===cho.attemptId) xoaDangLam();
+    state.khoaPhieu=false; state.choHienTai=null;
+    if(kq.cheDo==="on_tap"){
+      $("kq-diem-wrap").style.display="block";
+      $("kq-diem").textContent=Number(kq.diem).toFixed(2);
+      $("kq-diem-chu").textContent="/ 10 điểm";
+      veChiTietOnTap(kq.chiTiet||[]);
+      $("nut-xem-lai").style.display="none";
+    }else{
+      $("kq-mo-ta").textContent+=" Bài kiểm tra: đáp án sẽ được công bố theo lịch của giáo viên.";
+      $("nut-xem-lai").style.display="block";
+      $("nut-xem-lai").onclick=function(){ xemLaiBang(cho.attemptId, cho.accessCode); };
+    }
+  }catch(e){
+    /* Mất mạng / lỗi: KHÔNG hiện điểm tự tính. Bài chờ vẫn còn (nếu lưu được). */
+    if(e && e.data && e.data.dangHoanTat){
+      datTrangThai("cho","Bài đã chốt ở máy chủ, đang hoàn tất ghi. Bấm Gửi lại.");
+    }else{
+      datTrangThai("cho", state.choLuuDuoc===false
+        ? "Chưa xác nhận đã lưu."
+        : "Chưa xác nhận đã lưu. Bài làm vẫn giữ trên máy này.");
+    }
+    $("kq-mo-ta").textContent="Lỗi: "+(e.message||"không gửi được")+". Em bấm Gửi lại khi có mạng.";
+    $("nut-gui-lai").style.display="block";
+    /* Luôn cho tải bản sao khi chưa xác nhận (kể cả lỗi không tự hết như quá hạn) */
+    $("nut-tai-ban-sao").style.display="block";
+    if(e && e.data && e.data.quaHan){
+      $("kq-mo-ta").textContent="Máy chủ báo đã quá hạn nộp bài kiểm tra. Em tải bản sao phiếu trả lời "+
+        "và báo giáo viên mã lượt "+cho.attemptId+".";
+    }
+  }finally{ state.dangGui=false; }
+}
+
+function taiBanSao(){
+  var cho=state.choHienTai||docCho();
+  var blob=new Blob([JSON.stringify(cho||{ghiChu:"không có bài chờ"}, null, 1)],
+    {type:"application/json"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="phieu-tra-loi-"+(cho?cho.attemptId:"")+".json";
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); }, 500);
+}
+
+function datTrangThai(loai,chu){
+  var el=$("kq-trang-thai");
+  el.className="trang-thai "+loai; el.textContent=chu;
+}
+function veChiTietOnTap(chiTiet){
+  var html="";
+  chiTiet.forEach(function(x,i){
+    html+='<div class="review"><div><span class="badge '+(x.dungHoanToan?"dung":"sai")+'">'
+      +(x.dungHoanToan?"Đúng":"Chưa đúng")+'</span><b>Câu '+(i+1)+':</b> '
+      +thoatHTML(x.noiDung)+'</div>';
+    html+='<div class="muted">Điểm: '+x.diem.toFixed(2)+'</div>';
+    if(x.dapAnDung) html+='<div><b>Đáp án đúng:</b> '+thoatHTML(x.dapAnDung)+'</div>';
+    if(x.yDung) html+='<div><b>Đáp án đúng:</b> '+x.yDung.map(function(y,k){
+      return thoatHTML(chuY(y.kyHieu,k))+"-"+(y.dung?"Đ":"S"); }).join("; ")+'</div>';
+    if(x.giaiThich) html+='<div class="giai-thich"><b>Giải thích:</b> '+thoatHTML(x.giaiThich)+'</div>';
+    html+='</div>';
   });
-  $('nut-nop-tu-luoi').addEventListener('click',xacNhanNop);
-  $('nut-quay-lai').addEventListener('click',()=>{
-    if(state.cauHienTai>0){ state.cauHienTai--; veCauHoi(); }
+  $("kq-chi-tiet").innerHTML=html;
+}
+async function xemLai(){
+  await xemLaiBang(state.attemptId, state.accessCode);
+}
+async function xemLaiBang(attemptId, accessCode){
+  $("nut-xem-lai").disabled=true;
+  $("nut-gui-lai").style.display="none"; $("nut-tai-ban-sao").style.display="none";
+  $("kq-diem-wrap").style.display="none"; $("kq-chi-tiet").innerHTML="";
+  datTrangThai("cho","Đang tải kết quả…"); $("kq-mo-ta").textContent="";
+  try{
+    var kq=await goiAPI({action:"xemLai", attemptId:attemptId, accessCode:accessCode});
+    if(kq.cheDo==="on_tap"||kq.chiTiet){
+      $("kq-diem-wrap").style.display="block";
+      $("kq-diem").textContent=(kq.diem!=null?Number(kq.diem).toFixed(2):"—");
+      $("kq-diem-chu").textContent="/ 10 điểm";
+      veChiTietOnTap(kq.chiTiet||[]);
+      datTrangThai("ok","Đã lưu vào bảng của giáo viên.");
+    }
+  }catch(e){
+    var d=(e&&e.data)||{};
+    if(d.loi==="chua_cong_bo"||e.message==="chua_cong_bo"){
+      $("kq-mo-ta").textContent=d.thongBao||"Đáp án chưa được công bố. Em quay lại sau nhé.";
+    }else{
+      $("kq-mo-ta").textContent=e.message||"Chưa xem được.";
+    }
+  }finally{ $("nut-xem-lai").disabled=false; }
+}
+/* ================= TIẾP TỤC LƯỢT DANG DỞ ================= */
+async function kiemTraTrangChu(){
+  /* 1. lượt đang làm dở */
+  var l=docDangLam();
+  if(l){
+    try{
+      var kq=await goiAPI({action:"tiepTuc", attemptId:l.attemptId, accessCode:l.accessCode});
+      if(kq.daNop){
+        xoaDangLam();
+      }else if(docCho(l.attemptId)){
+        /* Lượt đã chốt nộp nhưng chưa tới máy chủ: chỉ gửi lại, không mở để sửa */
+        $("card-tiep-tuc").style.display="none";
+      }else{
+        $("card-tiep-tuc").style.display="block";
+        $("tiep-tuc-mo-ta").textContent="Mã đề "+kq.maDe+" · còn thời gian làm bài. Em có thể tiếp tục.";
+        $("nut-tiep-tuc").onclick=function(){ tiepTucLuot(l,kq); };
+      }
+    }catch(e){
+      /* máy chủ không với tới: giữ lượt + phiếu nháp, báo để thử lại khi có mạng */
+      if(!docCho(l.attemptId)){
+        $("card-tiep-tuc").style.display="block";
+        $("tiep-tuc-mo-ta").textContent="Mã đề "+(l.maDe||"")+" · chưa kết nối được máy chủ ("+
+          (e.message||"mất mạng")+"). Bài nháp vẫn giữ trên máy. Em bấm để thử lại.";
+        $("nut-tiep-tuc").onclick=function(){ kiemTraTrangChu(); };
+      }
+    }
+  }
+  /* 2. bài chờ gửi (đã chốt) — có thể nhiều bài, gửi bài cũ nhất trước */
+  var ds=docDsCho(), soCho=Object.keys(ds).length;
+  var cho=docCho();
+  $("card-gui-lai").style.display=cho?"block":"none";
+  if(cho){
+    $("gui-lai-mo-ta").textContent="Mã đề "+(cho.maDe||"")+" · mã lượt "+cho.attemptId+
+      ". Bài đã chốt, chỉ việc gửi lại."+(soCho>1?" (Còn "+soCho+" bài chờ gửi.)":"");
+    $("nut-gui-lai-home").onclick=function(){ guiCho(cho, false); };
+  }
+  /* 3. biên nhận đã nộp: giữ mã truy cập để xem lại sau (kể cả sau giờ công bố) */
+  veBienNhan();
+}
+function veBienNhan(){
+  var arr=docBienNhan();
+  if(!arr.length){ $("card-bien-nhan").style.display="none"; return; }
+  $("card-bien-nhan").style.display="block";
+  var html="";
+  arr.forEach(function(bn,idx){
+    html+='<div class="review"><b>Mã đề '+thoatHTML(bn.maDe||"")+'</b>'
+      +' <span class="muted">'+thoatHTML(bn.maHS||"")+' · '
+      +new Date(bn.ts).toLocaleString("vi-VN")+'</span>'
+      +'<div class="nav-row"><button class="btn primary" data-bn="'+idx+'">Xem kết quả</button></div></div>';
   });
-  $('nut-tiep-theo').addEventListener('click',()=>{
-    if(state.cauHienTai<state.dsCau.length-1){ state.cauHienTai++; veCauHoi(); }
-    else xacNhanNop();
+  $("ds-bien-nhan").innerHTML=html;
+  $("ds-bien-nhan").querySelectorAll("[data-bn]").forEach(function(b){
+    b.addEventListener("click",function(){
+      var bn=docBienNhan()[parseInt(b.getAttribute("data-bn"),10)];
+      if(bn){ hienManHinh("man-ket-qua"); xemLaiBang(bn.attemptId, bn.accessCode); }
+    });
   });
-  $('nut-gui-lai').addEventListener('click',guiLai);
-  $('nut-ve-trang-chu').addEventListener('click',()=>{
-    clearInterval(state.timerId);
-    hienManHinh('man-hinh-chinh');
+}
+async function tiepTucLuot(l,kq){
+  state.attemptId=l.attemptId; state.accessCode=l.accessCode; state.maDe=l.maDe;
+  state.hoTen=l.hoTen; state.lop=l.lop; state.soThuTu=l.soThuTu; state.maHS=l.maHS;
+  state.cheDo=kq.cheDo||"on_tap";
+  state.hanNop=kq.hanNop; state.lechGio=kq.serverNow-Date.now();
+  state.cauHoi=kq.cauHoi; state.cauHienTai=0; state.daNop=false;
+  try{ state.traLoi=JSON.parse(localStorage.getItem(KHO_CN+"phieu_"+l.attemptId)||"{}"); }
+  catch(e){ state.traLoi={}; }
+  batDauLamBai();
+}
+/* ================= KHỞI TẠO ================= */
+document.addEventListener("DOMContentLoaded",function(){
+  var made=maDeURL()||"GK1";
+  state.maDe=made;
+  $("hero-made").textContent="24 câu trắc nghiệm + 4 câu đúng/sai · 45 phút · 10 điểm. Mỗi lượt nhận đề mới theo ma trận.";
+  document.querySelectorAll("#chon-lop-x").forEach(function(){});
+  $("o-lop").addEventListener("change",capNhatMaHS);
+  $("o-stt").addEventListener("input",capNhatMaHS);
+  capNhatMaHS();
+  $("nut-bat-dau-chinh").addEventListener("click",function(){
+    $("tag-made").textContent="Mã đề "+state.maDe;
+    hienManHinh("man-thong-tin");
   });
-  $('nut-lam-lai').addEventListener('click',()=>batDauLamBai());
+  $("nut-tro-ve").addEventListener("click",function(){ hienManHinh("man-chinh"); });
+  $("nut-vao-lam-bai").addEventListener("click",function(){ vaoLamBai(true); });
+  $("nut-quay-lai").addEventListener("click",function(){
+    if(state.cauHienTai>0){ state.cauHienTai--; veCauHoi(); veLuoi(); } });
+  $("nut-tiep-theo").addEventListener("click",function(){
+    if(state.cauHienTai<state.cauHoi.length-1){ state.cauHienTai++; veCauHoi(); veLuoi(); }
+    else xacNhanNop(); });
+  $("nut-luoi-cau").addEventListener("click",function(){
+    $("luoi-cau-hoi").classList.toggle("mo"); });
+  $("nut-nop-bai").addEventListener("click",xacNhanNop);
+  $("hop-huy").addEventListener("click",function(){ $("hop-xac-nhan").close(); });
+  $("hop-dong-y").addEventListener("click",function(){
+    $("hop-xac-nhan").close(); nopBai(false); });
+  $("nut-gui-lai").addEventListener("click",function(){ guiCho(state.choHienTai, false); });
+  $("nut-xem-lai").addEventListener("click",xemLai);
+  $("nut-tai-ban-sao").addEventListener("click",taiBanSao);
+  $("nut-ve-trang-chu").addEventListener("click",function(){
+    /* B10: về trang chủ KHÔNG xóa bài chờ/lượt dở — giữ để gửi lại/tiếp tục */
+    clearInterval(state.timerId); $("luoi-wrap").style.display="none";
+    state.khoaPhieu=false;
+    hienManHinh("man-chinh"); kiemTraTrangChu(); });
+  $("nut-bo-luot").addEventListener("click",function(){
+    xoaDangLam(); $("card-tiep-tuc").style.display="none"; });
+  window.addEventListener("online",function(){
+    /* Tự thử lại khi có mạng nếu còn bài chờ gửi (ưu tiên bài đang hiển thị) */
+    var cho=state.choHienTai||docCho();
+    /* Không cắt ngang khi học sinh đang làm một lượt khác */
+    if(cho&&!state.dangGui&&!$("man-lam-bai").classList.contains("active")) guiCho(cho, false);
+  });
+  try {
+    var old=localStorage.getItem('cn12_ketqua_cho_gui');
+    if(old&&Array.isArray(JSON.parse(old))&&JSON.parse(old).length){
+      $('bai-cu').hidden=false;
+      $('tai-bai-cu').addEventListener('click',function(){
+        var a=document.createElement('a'),u=URL.createObjectURL(new Blob([old],{type:'application/json'}));
+        a.href=u;a.download='Ket_qua_Cong_nghe12_phien_ban_cu.json';a.click();setTimeout(function(){URL.revokeObjectURL(u);},1000);
+      });
+    }
+  }catch(e){}
+  kiemTraTrangChu();
 });
 </script>
 </body>
