@@ -4,4 +4,4 @@
 - [Ôn tập Sinh học 10 — đề 102](https://vvbhaidocbinhkieucailay-lang.github.io/on-tap-cong-nghe-12/sinh-10/?made=102)
 - [Ôn tập Sinh học 10 — đề 103](https://vvbhaidocbinhkieucailay-lang.github.io/on-tap-cong-nghe-12/sinh-10/?made=103)
 
-Các đường dẫn đề cũ và thử nghiệm được thay bằng chuyển hướng. Ngân hàng câu hỏi và kết quả nằm trên Google riêng tư.
+Các trang đề cũ và thử nghiệm đã tắt chức năng làm bài, chỉ thông báo ngừng sử dụng và có link ôn tập hiện tại. Ngân hàng câu hỏi và kết quả nằm trên Google riêng tư.

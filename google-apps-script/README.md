@@ -2,7 +2,7 @@
 
 Apps Script chính quản lý cấp đề, chấm bài và ghi kết quả vào Google Sheet riêng tư. Mã máy chủ và ngân hàng được lưu ngoài kho công khai này.
 
-Giao diện gọi Web App chính qua `APPS_SCRIPT_URL` trong `sinh-10/index.html`. Đường dẫn cũ `sinh-10-test/` chỉ chuyển hướng sang website chính.
+Giao diện gọi Web App chính qua `APPS_SCRIPT_URL` trong `sinh-10/index.html`. Đường dẫn cũ `sinh-10-test/` đã tắt, chỉ hiển thị thông báo ngừng sử dụng.
 
 Script Properties cần khai báo `BANK_SHEET_ID`, `RESULTS_SHEET_ID`, `GRACE_SECONDS`. `ADMIN_KEY` chỉ đặt riêng tư khi cần bật công bố sớm; để trống thì chức năng đó bị tắt.
 

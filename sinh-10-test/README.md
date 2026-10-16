@@ -1,3 +1,3 @@
-# Đường dẫn cũ
+# Trang thử đã tắt
 
-Trang thử nghiệm đã ngừng phục vụ đề. Link cũ tự chuyển đến `sinh-10/`, giữ mã đề 102 hoặc 103.
+Không nhận bài và không tự chuyển hướng. Học sinh chọn website ôn tập hiện tại trong thông báo.
